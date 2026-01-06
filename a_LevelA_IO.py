@@ -332,13 +332,15 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
             f.write("token,count\n")
             for k, v in emotion_counts.items():
                 f.write(f"{k},{v}\n")
-    files = {
-        "metrics_json": "metrics_levelA.json",
-        "evidence_csv": "evidence_levelA.csv",
-        } 
-
+        files = {
+            "metrics_json": "metrics_levelA.json",
+            "evidence_csv": "evidence_levelA.csv",
+            } 
+    else:
+        files = {}
 
     return metrics
+
 
 
 
