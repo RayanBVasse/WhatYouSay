@@ -258,7 +258,7 @@ def level_a():
                 user_handle=user_handle,
                 safe_user=safe_user,
                 out_dir=None,
-                render_mode=False
+                storage_mode="disk"  # "disk" | "memory"
             )
         except Exception as e:
             return render_template("error.html", message=str(e))
@@ -343,6 +343,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
