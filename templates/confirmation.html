@@ -109,8 +109,8 @@
           No personal data is shared or retained beyond this session.
         </p>
 
-        <form>
-          <a class="button" href="{{ url_for('level_a') }}">Oh, please continue to Level A....</a>
+        <form action="{{ url_for('level_a') }}" method="get">
+          <button type=submit class="button" >Oh, please continue to Level A....</button>
         </form>
 
         <p>
