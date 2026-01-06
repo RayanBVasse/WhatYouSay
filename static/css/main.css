@@ -2011,3 +2011,30 @@ input, select, textarea {
 				}
 
 	}
+
+.you-row td{
+  font-weight: 800;
+  color: #b00020;           /* deep red */
+}
+
+.confirm-grid{
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 980px){
+  .confirm-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
+
+
+
+
+
