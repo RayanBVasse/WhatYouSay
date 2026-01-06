@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import pprint
+import json
 from pathlib import Path
 from collections import Counter
 
@@ -262,6 +263,7 @@ def level_a():
                 out_dir=None,
                 storage_mode="memory"
             )
+            json.dumps(metrics)
             session["metrics"] = metrics   # ← THIS WAS MISSING
         except Exception as e:
             return render_template("error.html", message=str(e))
@@ -348,6 +350,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
