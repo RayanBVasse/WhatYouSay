@@ -255,27 +255,25 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
     role = role_scores(mode, burst_ratio=burst_ratio, initiation_proxy=initiation_proxy)
     conf = confidence_band(n_msgs)
 
-    plots = {}
+   plots = {
+    "emotion": None,
+    "moral": None,
+    "valence": None,
+    }
 
     if storage_mode == "disk":
-        emotion_plot = os.path.join(out_dir, "emotion_distribution.png")
-        save_bar(emotion_norm, "Emotion distribution (NRC)", emotion_plot)
-        plots["emotion"] = {"type": "file", "file": emotion_plot}
-    
-        moral_plot = os.path.join(out_dir, "moral_loading.png")
+        plots["emotion"] = {"type": "file", "file": "emotion_distribution.png"}
+
         if moral_norm:
-            save_bar(moral_norm, "Moral / value framing", moral_plot)
-            plots["moral"] = {"type": "file", "file": moral_plot}
-        else:
-            plots["moral"] = None
-    
-        valence_plot = os.path.join(out_dir, "valence_timeline.png")
-        save_line(valence_timeline, "Emoji valence timeline (proxy)", valence_plot, ylabel="Valence")
-        plots["valence"] = {"type": "file", "file": valence_plot}
-    else:
-        plots["emotion"] = {"type": "data", "data": emotion_norm}
-        plots["moral"] = {"type": "data", "data": moral_norm}
-        plots["valence"] = {"type": "data", "data": valence_timeline}
+            plots["moral"] = {"type": "file", "file": "moral_loading.png"}
+
+        plots["valence"] = {"type": "file", "file": "valence_timeline.png"}
+
+    else:  # memory mode
+        plots["emotion"] = {"type": "data", "data": list(emotion_norm.values())}
+        plots["moral"] = {"type": "data", "data": list(moral_norm.values()) if moral_norm else None}
+        plots["valence"] = {"type": "data", "data": list(valence_timeline)}
+
 
     for m in anon_msgs:
         if "timestamp" in m and m["timestamp"] is not None:
@@ -332,6 +330,7 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
         files = {}
 
     return metrics
+
 
 
 
