@@ -36,61 +36,123 @@
 					</div>
 				</div>
 
-        <!-- Main -->
+<!-- Main -->
 
-  <div id="main">
-					<div class="container">
-						<div class="row main-row">
-							<div class="col-12">
+<div id="main">
+	<div class="container">
+		<div class="row main-row">
+			<div class="col-12">
                 
-              
-                                
-
-
-
+ 
             <section>                   
-                <h2>Level A analysis</h2>
+            <h2>Level A analysis</h2>
                 
+			<h3>Participation overview</h3>
 
-                  <a class="button" href="{{ url_for('level_a') }}">Oh, please continue to Level A....</a>
+			<table class="alt">
+			  <thead>
+			    <tr>
+			      <th>Speaker</th>
+			      <th>Messages</th>
+			      <th>% of chat</th>
+			    </tr>
+			  </thead>
+			  <tbody>
+			    {% for row in metrics.ranked %}
+			    <tr {% if row.is_user %}style="font-weight:600;"{% endif %}>
+			      <td>{{ row.label }}</td>
+			      <td>{{ row.count }}</td>
+			      <td>{{ "%.1f"|format(row.percent) }}%</td>
+			    </tr>
+			    {% endfor %}
+			  </tbody>
+			</table>
 
-                <p>
-                  <a href="/WhatYouSay/">Cancel and return</a>
-                </p>
+			{% if metrics.plots.emotion and metrics.plots.emotion.type == "data" %}
+			<h3>Emotion distribution</h3>
+			<canvas id="emotionChart"></canvas>
+			
+			<script>
+			const emotionData = {{ metrics.plots.emotion.value | tojson }};
+			
+			new Chart(document.getElementById("emotionChart"), {
+			  type: "bar",
+			  data: {
+				labels: Object.keys(emotionData),
+				datasets: [{
+				  label: "Emotion count",
+				  data: Object.values(emotionData)
+				}]
+			  },
+			  options: {
+				responsive: true,
+				plugins: { legend: { display: false } }
+			  }
+			});
+			</script>
+			{% endif %}
 
+			{% if metrics.plots.moral and metrics.plots.moral.type == "data" %}
+			<h3>Moral / value framing</h3>
+			<canvas id="moralChart"></canvas>
+			
+			<script>
+			const moralData = {{ metrics.plots.moral.value | tojson }};
+			
+			new Chart(document.getElementById("moralChart"), {
+			  type: "bar",
+			  data: {
+			    labels: Object.keys(moralData),
+			    datasets: [{
+			      label: "Moral loading",
+			      data: Object.values(moralData)
+			    }]
+			  },
+			  options: {
+			    responsive: true,
+			    plugins: { legend: { display: false } }
+			  }
+			});
+			</script>
+			{% endif %}
+
+			{% if metrics.plots.valence and metrics.plots.valence.type == "data" %}
+			<h3>Emoji valence timeline</h3>
+			<canvas id="valenceChart"></canvas>
+			
+			<script>
+			const valenceSeries = {{ metrics.plots.valence.value | tojson }};
+			
+			new Chart(document.getElementById("valenceChart"), {
+			  type: "line",
+			  data: {
+			    labels: valenceSeries.map((_, i) => i + 1),
+			    datasets: [{
+			      label: "Valence",
+			      data: valenceSeries,
+			      tension: 0.2
+			    }]
+			  },
+			  options: {
+			    responsive: true
+			  }
+			});
+			</script>
+			{% endif %}
+
+				
+            <a class="button" href="{{ url_for('level_b') }}">Oh, please continue to Level B....</a>
+            <p>
+              <a href="/WhatYouSay/">Cancel and return</a>
+            </p>
             </section>
 
-						</div>
-					</div>
-    </div>
-  </div>
+				</div>
+			</div>
+		</div>
+</div>
 
-  <script>
-          const ctx = document.getElementById('speakerChart').getContext('2d');
-
-          new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: {{ speaker_data.chart_labels | tojson }},
-              datasets: [{
-                label: 'Messages',
-                data: {{ speaker_data.chart_values | tojson }},
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderRadius: 6
-              }]
-            },
-            options: {
-              plugins: {
-                legend: { display: false }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true
-                }
-              }
-            }
-          });
-        </script>
+  
   
 			<!-- Footer -->
 				<div id="footer-wrapper">
@@ -180,3 +242,4 @@
             <script src="{{ url_for('static', filename='js//main.js') }}"></script>
 </body>
 </html>
+
