@@ -255,7 +255,7 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
     role = role_scores(mode, burst_ratio=burst_ratio, initiation_proxy=initiation_proxy)
     conf = confidence_band(n_msgs)
 
-   plots = {
+    plots = {
         "emotion": None,
         "moral": None,
         "valence": None,
@@ -330,6 +330,7 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
         files = {}
 
     return metrics
+
 
 
 
