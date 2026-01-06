@@ -153,7 +153,7 @@ def upload():
     ranked_speakers = speaker_data["ranked"]
     chart_labels = speaker_data["chart_labels"]
     chart_values = speaker_data["chart_values"]
-    #chart_percentage = speaker_data["chart_percentage"]
+    chart_percentage = speaker_data["chart_percentage"]
     
     
     if not safe_user:
@@ -233,7 +233,8 @@ def upload():
         warnings=warnings,
         top_speakers=[(r["label"], r["count"]) for r in ranked_speakers],
         chart_labels=chart_labels,
-        chart_values=chart_values
+        chart_values=chart_values,
+        chart_percentage = chart_percentage
     )
 
 
@@ -341,6 +342,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
