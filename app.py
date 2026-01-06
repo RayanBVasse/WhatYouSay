@@ -129,9 +129,9 @@ def index():
 
 @app.route("/WhatYouSay/upload", methods=["POST"])
 def upload():
-    print("CONTENT TYPE:", request.content_type)
-    print("FORM KEYS:", list(request.form.keys()))
-    print("FILES KEYS:", list(request.files.keys()))
+    #print("CONTENT TYPE:", request.content_type)
+    #print("FORM KEYS:", list(request.form.keys()))
+    #print("FILES KEYS:", list(request.files.keys()))
     
     user_handle = request.form.get("user_handle", "").strip()
     platform = request.form.get("platform", "").strip()  # optional, if you still collect it
@@ -217,7 +217,7 @@ def upload():
     session["platform"] = platform
     session["paid"] = False
 
-    print("TOP_SPEAKERS:", speaker_counts.most_common(15))
+    #print("TOP_SPEAKERS:", speaker_counts.most_common(15))
 
     # Confirmation page
     return render_template(
@@ -341,6 +341,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
