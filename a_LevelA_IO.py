@@ -294,7 +294,7 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
     metrics = {
         "safe_user": safe_user,
         "n_messages": n_msgs,
-        "plots" = plots,
+        "plots" : plots,
         "avg_len_words": round(avg_len, 2),
         "question_pct": round(q_ratio * 100, 1),
         "emoji_pct": round(emoji_ratio * 100, 1),
@@ -332,6 +332,7 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
         files = {}
 
     return metrics
+
 
 
 
