@@ -68,7 +68,7 @@
 			  </tbody>
 			</table>
 
-			{% if metrics["plots"]["emotion"] and metrics["plots"]["emotion"]["type"] == "data" %}
+			{% if metrics.plots.emotion is not none and metrics.plots.emption.type == "data" %}
 			<h3>Emotion distribution</h3>
 			<canvas id="emotionChart"></canvas>
 			
@@ -92,7 +92,7 @@
 			</script>
 			{% endif %}
 
-			{% if metrics["plots"]["emotion"] and metrics["plots"]["emotion"]["type"] == "data" %}
+			{% if metrics.plots.moral is not none and metrics.plots.moral.type == "data" %}
 			<h3>Moral / value framing</h3>
 			<canvas id="moralChart"></canvas>
 			
@@ -242,6 +242,7 @@
             <script src="{{ url_for('static', filename='js//main.js') }}"></script>
 </body>
 </html>
+
 
 
 
