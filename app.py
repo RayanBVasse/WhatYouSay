@@ -146,7 +146,8 @@ def upload():
     filename = secure_filename(file.filename)
     save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(save_path)
-
+    session["chat_path"] = save_path
+    
     # Resolve user -> match against canonicalized speakers from parsed file
     safe_user, resolved_user_handle, messages, speaker_counts = resolve_user_handle_from_file(save_path, user_handle)
     speaker_data = anonymize_and_rank_speakers(speaker_counts, resolved_user_handle, top_n=10)
@@ -211,7 +212,7 @@ def upload():
     # Persist for next steps
     session.clear()
     session["parsed_data"] = True
-    
+    session["chat_path"] = save_path
     session["user_handle"] = resolved_user_handle      # EXACT speaker label (IO needs this)
     session["safe_user"] = safe_user                   # canonical safe id (folders/urls)
     session["platform"] = platform
@@ -258,7 +259,7 @@ def level_a():
                 user_handle=user_handle,
                 safe_user=safe_user,
                 out_dir=None,
-                storage_mode="disk"  # "disk" | "memory"
+                storage_mode="memory"  # "disk" | "memory"
             )
         except Exception as e:
             return render_template("error.html", message=str(e))
@@ -343,6 +344,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
