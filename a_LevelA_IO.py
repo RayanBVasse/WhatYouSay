@@ -159,7 +159,7 @@ def anonymize_and_split(messages, user_handle):
     return anon_msgs, self_msgs
 
 
-def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir):
+def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mode="disk"):
     if storage_mode == "disk":
         out_dir = os.path.join(RESULTS_DIR, safe_user)
         os.makedirs(out_dir, exist_ok=True)
@@ -339,5 +339,6 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir):
 
 
     return metrics
+
 
 
