@@ -40,16 +40,12 @@
   <div id="main">
     <div class="container">
       <section>
-
         <h2>Submission confirmed</h2>
-
         <p>
           The uploaded file has been processed locally.
           Please review the summary below before proceeding.
         </p>
-
         <hr>
-
         <h3>Basic information</h3>
         <ul>
           <li><strong>User handle:</strong> {{ user_handle }}</li>
@@ -58,11 +54,8 @@
           <li><strong>Lines:</strong> {{ line_count }}</li>
           <li><strong>Estimated messages:</strong> {{ message_count }}</li>
         </ul>
-
         <hr>
-
         <h3>Top speakers (anonymized)</h3>
-
         <table>
           <thead>
             <tr>
@@ -72,7 +65,7 @@
           </thead>
           <tbody>
           {% for speaker, count in top_speakers %}
-            <tr>
+            <tr class="{% if speaker == 'You' %}you-row{% endif %}">
               <td>{{ speaker }}</td>
               <td>{{ count }}</td>
             </tr>
@@ -89,9 +82,13 @@
             {% endfor %}
         </ul>
         {% endif %}
-
         <hr>
 
+
+
+
+
+		  
         <h3>Participation overview</h3>
         <div style="max-width: 600px; margin: 20px auto;"> <canvas id="speakerChart"</canvas> </div>
 
