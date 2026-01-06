@@ -92,7 +92,7 @@
 			</script>
 			{% endif %}
 
-			{% if metrics["plots"]["moral"] is not none and metrics["plots"]["moral"]["type"] == "data" %
+			{% if metrics["plots"]["moral"] is not none and metrics["plots"]["moral"]["type"] == "data" %}
 			<h3>Moral / value framing</h3>
 			<canvas id="moralChart"></canvas>
 			
@@ -242,6 +242,7 @@
             <script src="{{ url_for('static', filename='js//main.js') }}"></script>
 </body>
 </html>
+
 
 
 
