@@ -251,9 +251,6 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
     burst_ratio = (burst_hits / max(1, n_msgs))
     initiation_proxy = (long_gap_hits / max(1, n_msgs))
 
-    #print("NRC raw counts:", emotion_counts)
-    #print("NRC normalized:", emotion_norm)
-
     mode = mode_scores(heur_counts)
     role = role_scores(mode, burst_ratio=burst_ratio, initiation_proxy=initiation_proxy)
     conf = confidence_band(n_msgs)
@@ -263,22 +260,22 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
     if storage_mode == "disk":
         emotion_plot = os.path.join(out_dir, "emotion_distribution.png")
         save_bar(emotion_norm, "Emotion distribution (NRC)", emotion_plot)
-        plots["emotion"] = {"type": "file", "value": emotion_plot}
+        plots["emotion"] = {"type": "file", "file": emotion_plot}
     
         moral_plot = os.path.join(out_dir, "moral_loading.png")
         if moral_norm:
             save_bar(moral_norm, "Moral / value framing", moral_plot)
-            plots["moral"] = {"type": "file", "value": moral_plot}
+            plots["moral"] = {"type": "file", "file": moral_plot}
         else:
             plots["moral"] = None
     
         valence_plot = os.path.join(out_dir, "valence_timeline.png")
         save_line(valence_timeline, "Emoji valence timeline (proxy)", valence_plot, ylabel="Valence")
-        plots["valence"] = {"type": "file", "value": valence_plot}
+        plots["valence"] = {"type": "file", "file": valence_plot}
     else:
-        plots["emotion"] = {"type": "data", "value": emotion_norm}
-        plots["moral"] = {"type": "data", "value": moral_norm}
-        plots["valence"] = {"type": "data", "value": valence_timeline}
+        plots["emotion"] = {"type": "data", "data": emotion_norm}
+        plots["moral"] = {"type": "data", "data": moral_norm}
+        plots["valence"] = {"type": "data", "data": valence_timeline}
 
     for m in anon_msgs:
         if "timestamp" in m and m["timestamp"] is not None:
@@ -292,17 +289,12 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
                 text = m.get("text", "") or ""
                 f.write(f"{ts}\t{sp}\t{text}\n")
 
-    # Save anonymized chat if you want (optional)
-    # Save anonymized + self-only text files
     prefix = safe_user
-    #anon_file = os.path.join(out_dir, f"{prefix}_anonymized_chat.txt")
-    #self_file = os.path.join(out_dir, f"{prefix}_only_chat.txt")
-    #write_messages_txt(anon_file, anon_msgs)
-    #write_messages_txt(self_file, self_msgs)
 
     metrics = {
         "safe_user": safe_user,
         "n_messages": n_msgs,
+        "plots" = plots,
         "avg_len_words": round(avg_len, 2),
         "question_pct": round(q_ratio * 100, 1),
         "emoji_pct": round(emoji_ratio * 100, 1),
@@ -340,6 +332,7 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
         files = {}
 
     return metrics
+
 
 
 
