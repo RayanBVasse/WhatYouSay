@@ -150,8 +150,9 @@ def upload():
     # Resolve user -> match against canonicalized speakers from parsed file
     safe_user, resolved_user_handle, messages, speaker_counts = resolve_user_handle_from_file(save_path, user_handle)
     speaker_data = anonymize_and_rank_speakers(speaker_counts, resolved_user_handle, top_n=10)
-    chart_labels = [x["name"] for x in speaker_data]
-    chart_values = [x["count"] for x in speaker_data]
+    chart_labels, chart_values = zip(*speaker_data)
+    chart_labels = list(chart_labels)
+    chart_values = list(chart_values)
 
     
     if not safe_user:
@@ -338,5 +339,6 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
