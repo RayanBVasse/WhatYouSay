@@ -40,7 +40,9 @@
   <div id="main">
     <div class="container">
       <section>
-        <h2>Submission confirmed</h2>
+		 <div class="confirm-grid">
+  			<div class="confirm-left"> 
+        	<h2>Submission confirmed</h2>
         <p>
           The uploaded file has been processed locally.
           Please review the summary below before proceeding.
@@ -83,40 +85,12 @@
         </ul>
         {% endif %}
         <hr>
-
-
-
-
-
-		  
+	</div>
+		<div class="confirm-right">	  
         <h3>Participation overview</h3>
         <div style="max-width: 600px; margin: 20px auto;"> <canvas id="speakerChart"</canvas> </div>
-
-        <script>
-        const ctx = document.getElementById('speakerChart').getContext('2d');
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-            labels: {{ chart_labels | tojson }},
-            datasets: [{
-                label: 'Messages',
-                data: {{ chart_values | tojson }},
-                backgroundColor: 'rgba(54, 162, 235, 0.6)'
-            }]
-            },
-            options: {
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                beginAtZero: true
-                }
-            }
-            }
-        });
-        </script>
+	 	</div>
+	</div>
 
         <hr>
         <h3>Methodological note</h3>
@@ -145,7 +119,38 @@
     </div>
   </div>
 </div>
-			
+
+ <script>
+        const ctx = document.getElementById('speakerChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+            labels: {{ chart_labels | tojson }},
+            datasets: [{
+                label: 'Messages',
+                data: {{ chart_values | tojson }},
+                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }]
+            },
+            options: {
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                beginAtZero: true
+                }
+            }
+            }
+        });
+        </script>
+
+
+
+
+
+	
   <!-- Footer -->
 				<div id="footer-wrapper">
 					<div class="container">
