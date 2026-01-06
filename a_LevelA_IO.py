@@ -160,9 +160,11 @@ def anonymize_and_split(messages, user_handle):
 
 
 def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir):
-    out_dir = os.path.join(RESULTS_DIR, safe_user)
-    os.makedirs(out_dir, exist_ok=True)
-    
+    if storage_mode == "disk":
+        out_dir = os.path.join(RESULTS_DIR, safe_user)
+        os.makedirs(out_dir, exist_ok=True)
+    else:
+        out_dir = None
     
     msgs = load_chat_from_file(chat_path)
     anon_msgs, self_msgs = anonymize_and_split(msgs, user_handle)
@@ -256,17 +258,28 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir):
     role = role_scores(mode, burst_ratio=burst_ratio, initiation_proxy=initiation_proxy)
     conf = confidence_band(n_msgs)
 
-    # --- Visuals
-    emotion_plot = os.path.join(out_dir, "emotion_distribution.png")
-    save_bar(emotion_norm, "Emotion distribution (NRC)", emotion_plot)
+    plots = {}
 
-    moral_plot = os.path.join(out_dir, "moral_loading.png")
-    if moral_norm:
-        save_bar(moral_norm, "Moral / value framing", moral_plot)
-
-    valence_plot = os.path.join(out_dir, "valence_timeline.png")
-    save_line(valence_timeline, "Emoji valence timeline (proxy)", valence_plot, ylabel="Valence")
+    if storage_mode == "disk":
+        emotion_plot = os.path.join(out_dir, "emotion_distribution.png")
+        save_bar(emotion_norm, "Emotion distribution (NRC)", emotion_plot)
+        plots["emotion"] = {"type": "file", "value": emotion_plot}
     
+        moral_plot = os.path.join(out_dir, "moral_loading.png")
+        if moral_norm:
+            save_bar(moral_norm, "Moral / value framing", moral_plot)
+            plots["moral"] = {"type": "file", "value": moral_plot}
+        else:
+            plots["moral"] = None
+    
+        valence_plot = os.path.join(out_dir, "valence_timeline.png")
+        save_line(valence_timeline, "Emoji valence timeline (proxy)", valence_plot, ylabel="Valence")
+        plots["valence"] = {"type": "file", "value": valence_plot}
+    else:
+        plots["emotion"] = {"type": "data", "value": emotion_norm}
+        plots["moral"] = {"type": "data", "value": moral_norm}
+        plots["valence"] = {"type": "data", "value": valence_timeline}
+
     for m in anon_msgs:
         if "timestamp" in m and m["timestamp"] is not None:
             m["timestamp"] = m["timestamp"].isoformat()
@@ -282,11 +295,10 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir):
     # Save anonymized chat if you want (optional)
     # Save anonymized + self-only text files
     prefix = safe_user
-    anon_file = os.path.join(out_dir, f"{prefix}_anonymized_chat.txt")
-    self_file = os.path.join(out_dir, f"{prefix}_only_chat.txt")
-    write_messages_txt(anon_file, anon_msgs)
-    write_messages_txt(self_file, self_msgs)
-
+    #anon_file = os.path.join(out_dir, f"{prefix}_anonymized_chat.txt")
+    #self_file = os.path.join(out_dir, f"{prefix}_only_chat.txt")
+    #write_messages_txt(anon_file, anon_msgs)
+    #write_messages_txt(self_file, self_msgs)
 
     metrics = {
         "safe_user": safe_user,
@@ -310,15 +322,20 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir):
         }
     }
 
-     # metrics JSON
-    with open(os.path.join(out_dir, "metrics_levelA.json"), "w") as f:
-        json.dump(metrics, f, indent=2)
-
-# evidence CSV (simple example)
-    with open(os.path.join(out_dir, "evidence_levelA.csv"), "w", encoding="utf-8") as f:
-        f.write("token,count\n")
-        for k, v in emotion_counts.items():
-            f.write(f"{k},{v}\n")
+    if storage_mode == "disk":
+        # metrics JSON
+        with open(os.path.join(out_dir, "metrics_levelA.json"), "w") as f:
+            json.dump(metrics, f, indent=2)
+    
+        # evidence CSV (simple example)
+        with open(os.path.join(out_dir, "evidence_levelA.csv"), "w", encoding="utf-8") as f:
+            f.write("token,count\n")
+            for k, v in emotion_counts.items():
+                f.write(f"{k},{v}\n")
+     files = {
+        "metrics_json": "metrics_levelA.json",
+        "evidence_csv": "evidence_levelA.csv",
+        } 
 
 
     return metrics
