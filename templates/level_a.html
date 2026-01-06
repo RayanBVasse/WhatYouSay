@@ -37,45 +37,82 @@
 				</div>
 
 <!-- Main -->
-
 <div id="main">
-	<div class="container">
-		<div class="row main-row">
-			<div class="col-12">
-                
- 
-            <section>                   
-            <h2>Level A analysis</h2>
-                
-			<h3>Participation overview</h3>
+<div class="container">
+	<div class="row main-row">
+		<div class="col-4 col-12-medium">
+			<section>
+				<h2>Your participation!</h2>
+				<ul class="metrics-list">
+				<li><b>Total messages analysed&nbsp;&nbsp;:&nbsp;&nbsp; <b>{{ metrics.n_messages }}</b></li></b>
+				<li>
+					<b>Analysis reliability&nbsp;&nbsp;:&nbsp;&nbsp;<b>{{ metrics.confidence }}</b></b> 
+					<div class="hint">
+					(Based on the amount of text available for this analysis.)
+					</div>
+				</li>
+				</ul>
+			</section>
 
-			<table class="alt">
-			  <thead>
-			    <tr>
-			      <th>Speaker</th>
-			      <th>Messages</th>
-			      <th>% of chat</th>
-			    </tr>
-			  </thead>
-			  <tbody>
-			    {% for row in metrics.ranked %}
-			    <tr {% if row.is_user %}style="font-weight:600;"{% endif %}>
-			      <td>{{ row.label }}</td>
-			      <td>{{ row.count }}</td>
-			      <td>{{ "%.1f"|format(row.percent) }}%</td>
-			    </tr>
-			    {% endfor %}
-			  </tbody>
-			</table>
+		</div>
+		<div class="col-4 col-6-medium col-12-small">
 
-			{% if metrics["plots"] is defined
-   and metrics["plots"]["emotion"] is defined
-   and metrics["plots"]["emotion"]["type"] == "data"
-   and metrics["plots"]["emotion"]["data"] is defined %}
+			<section>
+				<h2>What this means (plain language)</h2>
+				<ul class="metrics-list">
+				<li>
+					<h3>Average message length:</h3> <b>Words&nbsp;&nbsp;:</b>  {{ metrics.avg_len_words }}
+					<span class="hint">&nbsp;&nbsp;(How much you tend to say per message)</span>
+				</li>
+				<li>
+					<b>Questions&nbsp;&nbsp;:</b> {{ metrics.question_pct }}%  
+					<span class="hint">&nbsp;&nbsp;(Signals curiosity and engagement)</span>
+				</li>
+				<li>
+					<b>Emoji use&nbsp;&nbsp;:</b> {{ metrics.emoji_pct }}%  
+					<span class="hint">&nbsp;&nbsp;(Light emotional or tone signalling)</span>
+				</li>
+				<li>
+					<b>Overall tone balance&nbsp;&nbsp;:</b> {{ metrics.tone_valence }}  
+					<span class="hint">&nbsp;&nbsp;(A neutral-to-positive balance is common)</span>
+				</li>
+				</ul>
+			</section>
 
+		</div>
+		<div class="col-4 col-6-medium col-12-small">
+
+			<section>
+				
+			</section>
+
+		</div>
+		<div class="col-6 col-12-medium">
+	<hr>
+<section>
+			<h2>Visual summaries</h2>
+			<p>The charts below offer a visual snapshot of how your communication unfolds over time.
+	They aren’t meant to diagnose or judge - they’re simply another way of seeing patterns that 
+	are usually invisible in day-to-day conversation. Think of this as a small observational 
+	experiment: the same words you already wrote, viewed from a different angle. You don’t need to 
+	interpret every number or bar. What matters is the overall shape, balance, 
+	and rhythm. Most people find that.....</p>
+		<ul class="big-image-list">
+		<div class="viz-row">
+		<div class="viz-image">
+<hr>
+</section>
+{% if metrics["plots"] is defined and metrics["plots"]["emotion"] is defined and metrics["plots"]["emotion"]["type"] == "data" and metrics["plots"]["emotion"]["data"] is defined %}
+		<div class="viz-text">
 			<h3>Emotion distribution</h3>
 			<canvas id="emotionChart"></canvas>
-			
+			<p>
+			This chart shows how emotional signals are distributed across your messages.
+			Some people express a narrow emotional range very consistently, while others shift tone depending on context or conversation partner.
+			Over time, these patterns tend to stabilise — and they often say more about communication style than about mood itself.
+            </p>
+		</div>
+		</div>	
 			<script>
 			const emotionData = {{ metrics["plots"]["emotion"]["data"] | tojson }};
 			
@@ -96,13 +133,17 @@
 			</script>
 			{% endif %}
 
-			{% if metrics["plots"] is defined
-   and metrics["plots"]["moral"] is defined
-   and metrics["plots"]["moral"]["type"] == "data"
-   and metrics["plots"]["moral"]["data"] is defined %}
+{% if metrics["plots"] is defined and metrics["plots"]["moral"] is defined and metrics["plots"]["moral"]["type"] == "data" and metrics["plots"]["moral"]["data"] is defined %}
+			<div class="viz-text">
 			<h3>Moral / value framing</h3>
 			<canvas id="moralChart"></canvas>
-			
+			<p>
+			This view captures how often your language reflects personal values, social norms, or evaluative judgments.
+			A stronger value signal usually appears in moments of conviction, disagreement, or leadership. 
+			Lower levels often indicate exploratory, descriptive, or observational communication.
+			Neither pattern is better — but each shapes how others experience your voice.
+			</p>
+			</div>
 			<script>
 			const moralData = {{ metrics["plots"]["moral"]["data"] | tojson }};
 			
@@ -123,12 +164,16 @@
 			</script>
 			{% endif %}
 
-			{% if metrics["plots"] is defined
-   and metrics["plots"]["emotion"] is defined
-   and metrics["plots"]["emotion"]["type"] == "data"
-   and metrics["plots"]["emotion"]["data"] is defined %}
+{% if metrics["plots"] is defined and metrics["plots"]["emotion"] is defined and metrics["plots"]["emotion"]["type"] == "data" and metrics["plots"]["emotion"]["data"] is defined %}
+			<div class="viz-text">
 			<h3>Emoji valence timeline</h3>
 			<canvas id="valenceChart"></canvas>
+			<p>
+			This timeline tracks emotional signalling through emojis across the conversation.
+			Rather than focusing on individual moments, the shape of the curve reveals rhythm: bursts, pauses, escalation, or emotional restraint.
+			Many people are surprised by how stable — or patterned — their emotional signalling becomes when viewed over time
+			</p>
+			</div>	
 			
 			<script>
 			const valenceSeries = {{ metrics["plots"]["valence"]["data"]  | tojson }};
@@ -252,6 +297,7 @@
             <script src="{{ url_for('static', filename='js//main.js') }}"></script>
 </body>
 </html>
+
 
 
 
