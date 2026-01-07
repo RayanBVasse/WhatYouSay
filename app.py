@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 
 # Shared IO (unchanged)
 from a_LevelA_IO import load_chat_from_file, run_level_a_pipeline, get_substantial_speakers
-
+from levelB_runner import generate_levelB_narrative
 # -----------------------------
 # App setup
 # -----------------------------
@@ -351,6 +351,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
