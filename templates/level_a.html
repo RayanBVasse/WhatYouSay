@@ -128,12 +128,21 @@
 																				datasets: [{
 																				  label: "Emotion count",
 																				  data: Object.values(emotionData)
+																				  backgroundColor: "#8ecae6"
 																				}]
 																			  },
 																			  options: {
 																				responsive: true,
+																				maintainAspectRatio: false,
 																				plugins: { legend: { display: false } }
-																			  }
+																			  },
+																			  scales: {
+																				  y: {
+																					beginAtZero: true,
+																					max: 0.3,
+																					ticks: { stepSize: 0.05 }
+																				  }
+																				}
 																			});
 																			</script>
 																			{% endif %}
@@ -339,6 +348,7 @@
             <script src="{{ url_for('static', filename='js//main.js') }}"></script>
 </body>
 </html>
+
 
 
 
