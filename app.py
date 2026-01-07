@@ -295,7 +295,7 @@ def serve_results(safe_user, filename):
 # -----------------------------
 @app.route("/WhatYouSay/level-b", methods=["GET"])
 def level_b():
-  if not session.get("parsed_data"):
+    if not session.get("parsed_data"):
         return redirect(url_for("index"))
     if not session.get("paid", False):
         return redirect(url_for("level_a"))
@@ -365,6 +365,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
