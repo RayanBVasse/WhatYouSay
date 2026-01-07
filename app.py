@@ -312,6 +312,9 @@ def level_b():
 
         session["levelB_narrative"] = report
 
+    print("parsed_data:", session.get("parsed_data"), type(session.get("parsed_data")))
+    print("session keys:", session.keys())
+    
     return render_template(
         "level_b.html",
         levelB_report=session["levelB_narrative"],
@@ -365,6 +368,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
