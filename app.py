@@ -130,10 +130,8 @@ def index():
 
 @app.route("/WhatYouSay/upload", methods=["POST"])
 def upload():
-    #print("CONTENT TYPE:", request.content_type)
-    #print("FORM KEYS:", list(request.form.keys()))
-    #print("FILES KEYS:", list(request.files.keys()))
     
+    session.clear()
     user_handle = request.form.get("user_handle", "").strip()
     platform = request.form.get("platform", "").strip()  # optional, if you still collect it
 
@@ -215,7 +213,7 @@ def upload():
         )
 
     # Persist for next steps
-    session.clear()
+    
     session["parsed_data"] = {"anon_text": anon_text, "self_text": self_text}
     session["chat_path"] = save_path
     session["user_handle"] = resolved_user_handle      # EXACT speaker label (IO needs this)
@@ -224,7 +222,7 @@ def upload():
     session["paid"] = False
 
     print("TOP_SPEAKERS:", speaker_counts.most_common(15))
-    print("LEVEL A parsed_data:", session.get("parsed_data"))
+    #print("LEVEL A parsed_data:", session.get("parsed_data"))
 
     # Confirmation page
     return render_template(
@@ -249,18 +247,18 @@ def upload():
 # -----------------------------
 @app.route("/WhatYouSay/level-a", methods=["GET"])
 def level_a():
-    if not session.get("parsed_data"):
-        return redirect(url_for("index"))
+   if "parsed_data" not in session:
+    return redirect(url_for("index"))
 
     chat_path = session.get("chat_path")
     user_handle = session.get("user_handle")  # exact speaker label
     safe_user = session.get("safe_user")
 
-    if not chat_path or not user_handle or not safe_user:
+   if not chat_path or not user_handle or not safe_user:
         return redirect(url_for("index"))
 
     # Run pipeline once per session (cache in session)
-    if "metrics" not in session:
+   if "metrics" not in session:
         try:
             metrics = run_level_a_pipeline(
                 chat_path=chat_path,
@@ -279,7 +277,7 @@ def level_a():
     #print("PLOTS TYPE:", type(session["metrics"].get("plots")))
     #print("PLOTS KEYS:", session["metrics"].get("plots", {}).keys())
 
-    return render_template(
+   return render_template(
         "level_a.html",
         metrics=session["metrics"],
         user_handle=user_handle,
@@ -372,6 +370,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
