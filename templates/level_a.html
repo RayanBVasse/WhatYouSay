@@ -249,7 +249,7 @@
 				<button disabled style="opacity:0.5;">Welcome to Level B</button>
 				{% else %}
 				<button disabled style="opacity:0.5;">Payment confirmed</button>
-				<a href="{{ url_for('level_b') }}" class="button">Welcome to Level B</a>
+				<a href="{{ url_for('level_b_intro') }}" class="button">Welcome to Level B</a>
 				{% endif %}
 				<hr>
 			</footer>
@@ -350,6 +350,7 @@
             <script src="{{ url_for('static', filename='js//main.js') }}"></script>
 </body>
 </html>
+
 
 
 
