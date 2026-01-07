@@ -240,7 +240,9 @@ def upload():
         chart_percentages = chart_percentages
     )
 
-
+# -----------------------------
+# LEVEL_A call
+# -----------------------------
 @app.route("/WhatYouSay/level-a", methods=["GET"])
 def level_a():
     if not session.get("parsed_data"):
@@ -288,6 +290,34 @@ def serve_results(safe_user, filename):
     directory = RESULTS_DIR / safe_user
     return send_from_directory(str(directory), filename)
 
+# -----------------------------
+# LEVEL_B call
+# -----------------------------
+@app.route("/WhatYouSay/level-b", methods=["GET"])
+def level_b():
+  if not session.get("parsed_data"):
+        return redirect(url_for("index"))
+    if not session.get("paid", False):
+        return redirect(url_for("level_a"))
+
+    # Generate Level-B narrative once per session
+    if "levelB_narrative" not in session:
+        report = generate_levelB_narrative(
+            anon_text=session["parsed_data"]["anon_text"],
+            self_text=session["parsed_data"]["self_text"],
+            metrics=session["metrics"],
+            evidence=session.get("evidence", {}),  # optional, empty for now
+            speaker_alias=session.get("safe_user"),
+        )
+
+        session["levelB_narrative"] = report
+
+    return render_template(
+        "level_b.html",
+        levelB_report=session["levelB_narrative"],
+        user_handle=session.get("user_handle"),
+        safe_user=session.get("safe_user")
+    )
 
 # -----------------------------
 # Dummy payment flow
@@ -305,22 +335,6 @@ def paypal_confirm():
         return redirect(url_for("index"))
     session["paid"] = True
     return redirect(url_for("level_a"))
-
-
-@app.route("/WhatYouSay/level-b", methods=["GET"])
-def level_b():
-    if not session.get("parsed_data"):
-        return redirect(url_for("index"))
-    if not session.get("paid", False):
-        return redirect(url_for("level_a"))
-
-    # Placeholder for now
-    return render_template(
-        "level_b.html",
-        user_handle=session.get("user_handle"),
-        safe_user=session.get("safe_user")
-    )
-
 
 # -----------------------------
 # Delete & Exit
@@ -351,6 +365,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
