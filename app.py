@@ -289,28 +289,28 @@ def serve_results(safe_user, filename):
 # -----------------------------
 @app.route("/WhatYouSay/level-b", methods=["GET"])
 def level_b():
-    if not session.get("parsed_data"):
+   if not session.get("parsed_data"):
            return redirect(url_for("index"))
-    if not session.get("paid", False):
+   if not session.get("paid", False):
            return redirect(url_for("level_a"))
 
-    chat_path = session.get("chat_path")
-    user_handle = session.get("user_handle")
-    safe_user = session.get("safe_user")
+   chat_path = session.get("chat_path")
+   user_handle = session.get("user_handle")
+   safe_user = session.get("safe_user")
 
-    if not chat_path or not user_handle or not safe_user:
+   if not chat_path or not user_handle or not safe_user:
            return redirect(url_for("index"))
    
    # Load messages fresh from disk
-    messages = load_chat_from_file(chat_path)
+   messages = load_chat_from_file(chat_path)
 
     # Split anon vs self (NO re-resolve here)
-    anon_msgs, self_msgs = anonymize_and_split(messages, user_handle)
-    anon_text = "\n".join(m.get("text", "") for m in anon_msgs)
-    self_text = "\n".join(m.get("text", "") for m in self_msgs)
+   anon_msgs, self_msgs = anonymize_and_split(messages, user_handle)
+   anon_text = "\n".join(m.get("text", "") for m in anon_msgs)
+   self_text = "\n".join(m.get("text", "") for m in self_msgs)
 
     # Generate Level-B narrative once per session
-    if "levelB_narrative" not in session:
+   if "levelB_narrative" not in session:
         report = generate_levelB_narrative(
             anon_text= anon_text,
             self_text= self_text,
@@ -319,9 +319,9 @@ def level_b():
             speaker_alias=session.get("safe_user"),
         )
 
-        session["levelB_narrative"] = report
+   session["levelB_narrative"] = report
     
-    return render_template(
+   return render_template(
         "level_b.html",
         levelB_report=session["levelB_narrative"],
         user_handle=session.get("user_handle"),
@@ -374,6 +374,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
