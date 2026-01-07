@@ -2065,7 +2065,13 @@ input, select, textarea {
   border-radius: 10px;
   margin-top: 16px;
 }
-
+.caption {
+  font-size: 0.9em;
+  color: #6c757d;
+  line-height: 1.4;
+  max-width: 520px;
+  margin: 0.5em auto 0;
+}
 
 
 
