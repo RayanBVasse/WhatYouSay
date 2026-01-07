@@ -10,7 +10,7 @@ from flask import ( Flask, render_template, request, redirect, url_for, session,
 from werkzeug.utils import secure_filename
 
 # Shared IO (unchanged)
-from a_LevelA_IO import load_chat_from_file, run_level_a_pipeline, get_substantial_speakers
+from a_LevelA_IO import load_chat_from_file, run_level_a_pipeline, get_substantial_speakers, anonymize_and_split
 from levelB_runner import generate_levelB_narrative
 # -----------------------------
 # App setup
@@ -32,8 +32,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 app.config["UPLOAD_FOLDER"] = str(UPLOAD_DIR)
 app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_MB * 1024 * 1024
-
-    
+   
     
 # -----------------------------
 # Canonicalization (ONE function)
@@ -152,6 +151,10 @@ def upload():
     
     # Resolve user -> match against canonicalized speakers from parsed file
     safe_user, resolved_user_handle, messages, speaker_counts = resolve_user_handle_from_file(save_path, user_handle)
+    anon_msgs, self_msgs = anonymize_and_split(messages, resolved_user_handle)
+    anon_text = "\n".join(m.get("text", "") for m in anon_msgs)
+    self_text = "\n".join(m.get("text", "") for m in self_msgs)
+    
     speaker_data = anonymize_and_rank_speakers(speaker_counts, resolved_user_handle, top_n=10)
     ranked_speakers = speaker_data["ranked"]
     chart_labels = speaker_data["chart_labels"]
@@ -368,6 +371,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
