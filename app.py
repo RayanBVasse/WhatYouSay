@@ -302,12 +302,12 @@ def level_b():
            return redirect(url_for("index"))
    
    # Load messages fresh from disk
-       messages = load_chat_from_file(chat_path)
+      messages = load_chat_from_file(chat_path)
 
     # Split anon vs self (NO re-resolve here)
-       anon_msgs, self_msgs = anonymize_and_split(messages, user_handle)
-       anon_text = "\n".join(m.get("text", "") for m in anon_msgs)
-       self_text = "\n".join(m.get("text", "") for m in self_msgs)
+      anon_msgs, self_msgs = anonymize_and_split(messages, user_handle)
+      anon_text = "\n".join(m.get("text", "") for m in anon_msgs)
+      self_text = "\n".join(m.get("text", "") for m in self_msgs)
 
     # Generate Level-B narrative once per session
     if "levelB_narrative" not in session:
@@ -374,6 +374,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
