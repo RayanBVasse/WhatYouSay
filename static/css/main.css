@@ -2043,7 +2043,23 @@ input, select, textarea {
   height: auto;
 }
 
+.levelb-preview-card {
+  background: #f4f7fa;          /* soft light gray */
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 420px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+}
 
+.levelb-preview-card h4 {
+  margin-top: 0;
+}
+
+.levelb-preview-img {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 16px;
+}
 
 
 
