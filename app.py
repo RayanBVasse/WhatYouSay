@@ -213,7 +213,7 @@ def upload():
 
     # Persist for next steps
     session.clear()
-    session["parsed_data"] = True
+    session["parsed_data"] = {"anon_text": anon_text, "self_text": self_text}
     session["chat_path"] = save_path
     session["user_handle"] = resolved_user_handle      # EXACT speaker label (IO needs this)
     session["safe_user"] = safe_user                   # canonical safe id (folders/urls)
@@ -368,6 +368,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
