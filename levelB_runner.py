@@ -24,14 +24,14 @@ def generate_levelB_narrative(*,anon_text: str,self_text: str,metrics: dict,evid
     Returns parsed JSON (dict).
     Safe for Flask / Render / sessions.
     """
-    MAX_CHARS = 120_000  # safe for Render free tier
-    def _truncate(text: str, limit: int) -> str:
-        if len(text) <= limit:
-            return text
-        return text[:limit] + "\n\n[TRUNCATED]"
+    #MAX_CHARS = 120_000  # safe for Render free tier
+    #def _truncate(text: str, limit: int) -> str:
+    #    if len(text) <= limit:
+    #        return text
+    #    return text[:limit] + "\n\n[TRUNCATED]"
 
-    anon_text = _truncate(anon_text, MAX_CHARS)
-    self_text = _truncate(self_text, MAX_CHARS)
+    #anon_text = _truncate(anon_text, MAX_CHARS)
+    #self_text = _truncate(self_text, MAX_CHARS)
 
     evidence = evidence or {}
 
@@ -182,6 +182,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
