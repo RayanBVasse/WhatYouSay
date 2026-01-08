@@ -52,21 +52,21 @@
                 Emphasise patterns, not diagnosis.
                 </p>
                 
-                <4>What changes here</4>
+                <h4>What changes here</h4>
                 <br>
-                <b>Mentions:</b>
-                <br><p>
+                
+                <p>
                 deeper drill-down of Level A signals
-
+                <br>
                 contextual comparison (“relative to other participants in the same conversation”)
-
+                <br>
                 examples drawn directly from the speaker’s own text
                 </p>
 
                 <h4>Runtime notice</h4>
                 <br>
                 <p>
-                “Depending on conversation size, this may take 10–60 seconds.”
+                Depending on conversation size, this may take <strong>10–60 seconds.</strong>
                 <br>
                 “Please <strong>do not</strong> refresh.”
                 </p>
@@ -80,31 +80,34 @@
                 “Leaving the page clears results.”
                 </p>
                 <p>
-                <h4>Download warning (future-proofing)</h4>
 
+                <h4>Download warning (future-proofing)</h4>
+                <br><p>
                 “If you later download a report, that file is generated on demand.”
                 <br>
                 </p>
 
                 <p>
                 <h4>Explicit consent</h4>
-                <br>
-                Checkbox:
-                <br>
-                “I understand this analysis describes language patterns, not personal traits.”
-                <br>
+                
                 </p>
 
                 Button disabled until checked.</pre>
                 <br>
                 <hr>
-				<a class="button" href="{{ url_for('level_b') }}">Proceed to Level B....</a>
-				<hr><br>	
+                <form action="{{ url_for('level_b') }}" method="get">
+					<label>
+						<input type="checkbox" required>
+						I understand this analysis may take time and should not be refreshed.
+					</label>
+					<button type="submit" class="button">Proceed to Level B analysis</button>
+					</form>
+                <hr><br>
                 <form action="{{ url_for('delete_and_exit') }}" method="post">
-                  <button type="submit">Delete & Exit</button>
+                  <button type="submit" class="button" >Delete & Exit</button>
                 </form>
 
-                <button disabled>Download ZIP (coming next)</button>
+                <button disabled class="button" >Download ZIP (coming next)</button>
           </section>
 
             
@@ -196,4 +199,3 @@
             <script src="{{ url_for('static', filename='js//main.js') }}"></script>
 </body>
 </html>
-
