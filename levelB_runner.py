@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import time
 from pathlib import Path
 from openai import OpenAI
 
@@ -132,6 +133,9 @@ def main():
     prompt_path.write_text(prompt, encoding="utf-8")
     print(f"Prompt written: {prompt_path}")
 
+    t0 = time.time()
+    print("LEVEL B START")
+    
     # Call LLM
     print("Calling OpenAI...")
     raw = call_openai(prompt)
@@ -170,3 +174,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
