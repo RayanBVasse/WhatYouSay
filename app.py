@@ -15,6 +15,7 @@ from levelB_runner import generate_levelB_narrative
 # -----------------------------
 # App setup
 # -----------------------------
+LEVELB_CACHE = {}
 BASE_DIR = Path(__file__).resolve().parent
 
 UPLOAD_DIR = BASE_DIR / "uploads"
@@ -342,7 +343,13 @@ def level_b():
         )
 
    session["levelB_narrative"] = report
-    
+   key = session["safe_user"]
+
+   if key not in LEVELB_CACHE:
+    LEVELB_CACHE[key] = generate_levelB_narrative(...)
+
+   report = LEVELB_CACHE[key] 
+   
    return render_template(
         "level_b.html",
         levelB_report=session["levelB_narrative"],
@@ -396,6 +403,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
