@@ -348,7 +348,7 @@ def level_b():
    
    return render_template(
         "level_b.html",
-        levelB_report=session["levelB_narrative"],
+        levelB_report=report, 
         user_handle=session.get("user_handle"),
         safe_user=session.get("safe_user")
     )
@@ -399,6 +399,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
