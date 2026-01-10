@@ -78,7 +78,7 @@ Python 3.9+, WhatsApp chat export (.txt), (Optional) OpenAI API key for Level B
 
 Running Level A via CLI
 Basic usage:
-python cli.py --input chat.txt --handle Gareth
+python cli.py --input chat.txt --handle "user handle"
 For phone numbers (spaces allowed):
 python cli.py --input chat.txt --handle +XX NNNN YYYYY
 
@@ -96,7 +96,7 @@ If the speaker is found but below threshold, the CLI reports:
 -a warning about reliability
 
 You may override this:
-python cli.py --input chat.txt --handle Gareth --min-pct 0.1
+python cli.py --input chat.txt --handle "user handle" --min-pct 0.1
 
 Running Level B
 Level B is optional and requires an API key.
