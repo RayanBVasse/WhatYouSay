@@ -256,7 +256,8 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
         "trust",
         "positive",
         "negative",
-    ] ordered_emotion_norm = {label: emotion_norm.get(label, 0) for label in emotion_order}
+    ] 
+    ordered_emotion_norm = {label: emotion_norm.get(label, 0) for label in emotion_order}
     
     moral_norm = normalize_counter(moral_counts) if moral_counts else {}
     tone_valence = tone_from_nrc(emotion_norm)
@@ -344,6 +345,7 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
         files = {}
 
     return metrics
+
 
 
 
