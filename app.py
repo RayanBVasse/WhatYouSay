@@ -135,7 +135,14 @@ def upload():
     session.clear()
     user_handle = request.form.get("user_handle", "").strip()
     platform = request.form.get("platform", "").strip()  # optional, if you still collect it
-
+    
+    consent = request.form.get("consent")
+    if not consent:
+        return render_template(
+            "error.html",
+            message="Please confirm that you have permission to upload the file.",
+        )
+       
     file = request.files.get("text")
     if not file or file.filename == "":
         return render_template("error.html", message="No file selected.")
@@ -399,6 +406,7 @@ def delete_and_exit():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
