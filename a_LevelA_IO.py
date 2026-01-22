@@ -104,6 +104,134 @@ def canonicalize(s: str) -> str:
     s = s.lower()
     return "".join(ch for ch in s if ch.isalnum())
 
+def bucket_time_of_day(messages, label_map):
+    results = {}
+    for speaker, label in label_map.items():
+        results[label] = {"hourly_counts": {hour: 0 for hour in range(24)}, "peak_hour": None}
+
+    for m in messages:
+        speaker = m.get("speaker")
+        if speaker not in label_map:
+            continue
+        ts = m.get("timestamp")
+        if not ts:
+            continue
+        results[label_map[speaker]]["hourly_counts"][ts.hour] += 1
+
+    for label, data in results.items():
+        hourly = data["hourly_counts"]
+        if hourly:
+            data["peak_hour"] = max(hourly, key=lambda h: (hourly[h], -h))
+
+    return results
+
+def bucket_day_of_week(messages, label_map):
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    results = {
+        label: {"day_counts": {day: 0 for day in days}, "peak_day": None}
+        for label in label_map.values()
+    }
+
+    for m in messages:
+        speaker = m.get("speaker")
+        if speaker not in label_map:
+            continue
+        ts = m.get("timestamp")
+        if not ts:
+            continue
+        day_label = days[ts.weekday()]
+        results[label_map[speaker]]["day_counts"][day_label] += 1
+
+    for label, data in results.items():
+        day_counts = data["day_counts"]
+        if day_counts:
+            data["peak_day"] = max(day_counts, key=lambda d: (day_counts[d], -days.index(d)))
+
+    return results
+
+def compute_emoji_usage(messages, label_map):
+    counts = Counter()
+    msg_counts = Counter()
+
+    for m in messages:
+        speaker = m.get("speaker")
+        if speaker not in label_map:
+            continue
+        label = label_map[speaker]
+        msg_counts[label] += 1
+        counts[label] += len(m.get("emojis") or [])
+
+    results = {}
+    for label in label_map.values():
+        total_msgs = msg_counts[label]
+        results[label] = {
+            "emoji_count": int(counts[label]),
+            "messages": int(total_msgs),
+            "emoji_per_message": round(counts[label] / max(1, total_msgs), 4),
+        }
+
+    return results
+
+def compute_question_behavior(messages, primary_speaker, label_map):
+    question_counts = Counter()
+    response_targets = Counter()
+    question_response_targets = Counter()
+
+    for m in messages:
+        speaker = m.get("speaker")
+        if speaker not in label_map:
+            continue
+        label = label_map[speaker]
+        text = m.get("text") or ""
+        if "?" in text:
+            question_counts[label] += 1
+
+    for prev_msg, msg in zip(messages, messages[1:]):
+        if msg.get("speaker") != primary_speaker:
+            continue
+        prev_speaker = prev_msg.get("speaker")
+        if prev_speaker not in label_map:
+            continue
+        target_label = label_map[prev_speaker]
+        response_targets[target_label] += 1
+        if "?" in (prev_msg.get("text") or ""):
+            question_response_targets[target_label] += 1
+
+    return {
+        "question_counts": dict(question_counts),
+        "responses_by_user": dict(response_targets),
+        "top_response_target": response_targets.most_common(1)[0][0] if response_targets else None,
+        "question_responses_by_user": dict(question_response_targets),
+        "top_question_response_target": (
+            question_response_targets.most_common(1)[0][0] if question_response_targets else None
+        ),
+    }
+
+def compute_interaction_partners(messages, primary_speaker, label_map):
+    interactions = Counter()
+
+    for prev_msg, msg in zip(messages, messages[1:]):
+        speakers = {prev_msg.get("speaker"), msg.get("speaker")}
+        if primary_speaker not in speakers:
+            continue
+        other = (speakers - {primary_speaker}).pop() if len(speakers) == 2 else None
+        if other not in label_map:
+            continue
+        interactions[label_map[other]] += 1
+
+    ranked = [
+        {"user": label, "count": count}
+        for label, count in interactions.most_common()
+    ]
+
+    return {
+        "counts": dict(interactions),
+        "ranked": ranked,
+    }
+
+
+
+
 # ================================
 # LEVEL A
 # ================================
@@ -159,6 +287,138 @@ def anonymize_and_split(messages, user_handle):
     return anon_msgs, self_msgs
 
 
+
+def extract_emotion_evidence(self_msgs,nrc_lex,target_emotions=("joy", "trust", "anticipation", "surprise"),
+    top_k=5,
+):
+    """
+    Extract representative message examples contributing to selected NRC emotions.
+    Returns a dict keyed by emotion.
+    """
+
+    evidence = {e: [] for e in target_emotions}
+
+    for m in self_msgs:
+        text = m.get("text", "") or ""
+        if not text.strip():
+            continue
+
+        toks = tokenize(text)
+        token_count = len(toks)
+        hits = lexicon_hits(toks, nrc_lex)
+
+        for emo in target_emotions:
+            count = hits.get(emo, 0)
+            if count > 0:
+                evidence[emo].append({
+                    "text": text,
+                    "base": float(count),
+                    "token_count": token_count,
+                })
+
+    # Display-only illustrative selection; does not change aggregate metrics.
+    for emo in evidence:
+        evidence[emo] = select_top_examples(evidence[emo], top_k=top_k)
+
+    return evidence
+
+def extract_emotion_quotes(self_msgs, seed=42, max_samples=5, min_words=4):
+    import random
+    random.seed(seed)
+
+    TARGET_EMOTIONS = ["joy", "trust", "anticipation", "surprise"]
+    evidence = {"emotion": {}}
+
+    for emo in TARGET_EMOTIONS:
+        hits = [
+            m["text"]
+            for m in self_msgs
+            if m.get(f"emo_{emo}", 0) > 0 and m["word_count"] >= min_words
+        ]
+
+        total = len(hits)
+        samples = random.sample(hits, min(max_samples, total)) if total else []
+
+        evidence["emotion"][emo] = {
+            "total": total,
+            "samples": samples
+        }
+
+    return evidence
+
+def extract_moral_evidence(self_msgs,moral_weight,pos_threshold=0.2,neg_threshold=-0.2,top_k=5,):
+    """
+    Extract representative moral-positive and moral-negative message examples.
+    """
+
+    evidence = {
+        "moral_positive": [],
+        "moral_negative": [],
+    }
+
+    if not moral_weight:
+        return evidence
+
+    for m in self_msgs:
+        text = m.get("text", "") or ""
+        if not text.strip():
+            continue
+
+        toks = tokenize(text)
+        token_count = len(toks)
+        score = 0.0
+
+        for t in toks:
+            if t in moral_weight:
+                score += moral_weight[t]
+
+        if score >= pos_threshold:
+            evidence["moral_positive"].append({
+                "text": text,
+                "base": float(score),
+                "token_count": token_count,
+            })
+        elif score <= neg_threshold:
+            evidence["moral_negative"].append({
+                "text": text,
+                "base": abs(float(score)),
+                "token_count": token_count,
+            })
+
+    # Display-only illustrative selection; does not change aggregate metrics.
+    for k in evidence:
+        evidence[k] = select_top_examples(evidence[k], top_k=top_k)
+
+    return evidence
+
+def extract_moral_quotes(self_msgs, seed=42, max_samples=5, min_words=4):
+    import random
+    random.seed(seed)
+
+    pos = [
+        m["text"] for m in self_msgs
+        if m.get("moral_positive", 0) > 0 and m["word_count"] >= min_words
+    ]
+    neg = [
+        m["text"] for m in self_msgs
+        if m.get("moral_negative", 0) > 0 and m["word_count"] >= min_words
+    ]
+
+    return {
+        "moral": {
+            "positive": {
+                "total": len(pos),
+                "samples": random.sample(pos, min(max_samples, len(pos))) if pos else []
+            },
+            "negative": {
+                "total": len(neg),
+                "samples": random.sample(neg, min(max_samples, len(neg))) if neg else []
+            }
+        }
+    }
+
+
+
 def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mode="disk"):
     if storage_mode == "disk":
         out_dir = os.path.join(RESULTS_DIR, safe_user)
@@ -172,6 +432,8 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
     if n_msgs == 0:
         raise ValueError("Selected handle has 0 messages in this export.")
 
+    other_speakers = get_top_other_speakers(msgs, user_handle, limit=4)
+    label_map = build_user_label_map(user_handle, other_speakers)
     avg_len, q_ratio, emoji_ratio = level_a_stats(self_msgs)
 
     # --- Lexicons
@@ -206,6 +468,15 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
 
         # NRC emotion hits (categorical labels)
         emotion_counts += lexicon_hits(toks, nrc_lex)
+        
+        emo_hits = lexicon_hits(toks, nrc_lex)
+        for emo, count in emo_hits.items():
+            m[f"emo_{emo}"] = int(count)
+
+        # Moral lexicon:
+        m["moral_score"] = 0.0
+        m["moral_positive"] = False
+        m["moral_negative"] = False
 
         # Moral lexicon:
         if moral_cat:
@@ -220,7 +491,12 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
                 moral_counts["moral_positive"] += 1
             elif score < -0.2:
                 moral_counts["moral_negative"] += 1
+        
+        m["moral_score"] = score
+        m["moral_positive"] = score > 0.2
+        m["moral_negative"] = score < -0.2
 
+        
         # heuristics (question/hedge/corrective/affiliative/challenge)
         h = message_heuristics(text)
         for k, v in h.items():
@@ -345,6 +621,7 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir, storage_mod
         files = {}
 
     return metrics
+
 
 
 
