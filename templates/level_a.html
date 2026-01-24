@@ -101,11 +101,18 @@
 	and rhythm. Most people find that.....</p>
 <hr>
 </section>
-		<ul class="big-image-list">	
-{% if metrics["plots"] is defined and metrics["plots"]["emotion"] is defined and metrics["plots"]["emotion"]["type"] == "data" and metrics["plots"]["emotion"]["data"] is defined %}
-		<section class="visual-section">
-		  <div class="visual-row two-col">
-		    <!-- Emotion bar chart -->
+			
+		{% if metrics["plots"] is defined %}
+
+<section class="visual-section">
+
+  {# ---------- ROW 1: Emotion + Moral ---------- #}
+  <div class="visual-row two-col">
+
+		    {% if metrics["plots"]["emotion"] is defined
+		       and metrics["plots"]["emotion"]["type"] == "data"
+		       and metrics["plots"]["emotion"]["data"] is defined %}
+		
 		    <div class="visual-block">
 		      <h3>Emotion distribution</h3>
 		      <div class="chart-container">
@@ -113,115 +120,101 @@
 		      </div>
 		      <p class="caption">
 		        This chart shows how emotional signals are distributed across your messages.
-		        Some people express a narrow emotional range very consistently, while others shift tone depending on context or conversation partner.
-		        Over time, these patterns tend to stabilise — and they often say more about communication style than about mood itself.
 		      </p>
-		    </div>	
-					<script>
-					  console.log("emotionData =", emotionData);
-					</script>
+		    </div>
+		
+		    {% endif %}
 
-					<script>
-					const emotionData = {{ metrics["plots"]["emotion"]["data"] | tojson }};
-					
-					new Chart(document.getElementById("emotionChart"), {
-					  type: "bar",
-					  data: {
-						labels: Object.keys(emotionData),
-						datasets: [{
-						  label: "Emotion count",
-						  data: Object.values(emotionData),
-						  backgroundColor: "#8ecae6"
-						}]
-					  },
-					  options: {
-						responsive: true,
-						maintainAspectRatio: false,
-						plugins: { legend: { display: false } }
-					  },
-						scales: {
-						  y: {
-							beginAtZero: true,
-							max: 0.3,
-							ticks: { stepSize: 0.05 }
-						  }
-						}															
-					});
-					</script>
-					{% endif %}
-
-<!-- Moral pie chart -->			  
-{% if metrics["plots"] is defined and metrics["plots"]["moral"] is defined and metrics["plots"]["moral"]["type"] == "data" and metrics["plots"]["moral"]["data"] is defined %}
-		<div class="visual-block">
+		    {% if metrics["plots"]["moral"] is defined
+		       and metrics["plots"]["moral"]["type"] == "data"
+		       and metrics["plots"]["moral"]["data"] is defined %}
+		
+		    <div class="visual-block">
 		      <h3>Moral / value framing</h3>
 		      <div class="chart-container">
 		        <canvas id="moralChart"></canvas>
 		      </div>
 		      <p class="caption">
-		        This view captures how often your language reflects personal values,
-		        social norms, or evaluative judgments.
-		        Neither pattern is better — but each shapes how others experience your voice.
+		        This view captures how often your language reflects values or evaluative judgement.
 		      </p>
 		    </div>
+		
 		    {% endif %}
-		</div>
+
+  </div>
+
+		  {# ---------- ROW 2: Valence timeline ---------- #}
+		  {% if metrics["plots"]["valence"] is defined
+		     and metrics["plots"]["valence"]["type"] == "data"
+		     and metrics["plots"]["valence"]["data"] is defined %}
+		
+		  <div class="visual-row full-width">
+		    <div class="visual-block">
+		      <h3>Emoji valence timeline</h3>
+		      <div class="chart-container">
+		        <canvas id="valenceChart"></canvas>
+		      </div>
+		      <p class="caption">
+		        This timeline tracks emotional signalling through emojis over time.
+		      </p>
+		    </div>
+		  </div>
+		
+		  {% endif %}
 
 </section>
-				<script>
-				const moralData = {{ metrics["plots"]["moral"]["data"] | tojson }};
-				
-				new Chart(document.getElementById("moralChart"), {
-				  type: "pie",
-				  data: {
-					labels: Object.keys(moralData),
-					datasets: [{
-					  label: "Moral loading",
-					  data: Object.values(moralData),
-					backgroundColor: ["#adb5bd", "#74c0fc"]
-					}]
-				  },
-				  options: {
-					responsive: true,
-					plugins: { legend: { position: "bottom" } 
-								}
-				  }
-				});
-				</script>
-				{% endif %}
 
-{% if metrics["plots"] is defined and metrics["plots"]["emotion"] is defined and metrics["plots"]["emotion"]["type"] == "data" and metrics["plots"]["emotion"]["data"] is defined %}
-		<div class="viz-text">
-			<h3>Emoji valence timeline</h3>
-		<div class="viz-row">
-		<div class="viz-image">	
-			<canvas id="valenceChart"></canvas>
-			<p>
-			This timeline tracks emotional signalling through emojis across the conversation.
-			Rather than focusing on individual moments, the shape of the curve reveals rhythm: bursts, pauses, escalation, or emotional restraint.
-			Many people are surprised by how stable — or patterned — their emotional signalling becomes when viewed over time
-			</p>
-			</div>	
-		</div>
-	</div>
-							<script>
-							const valenceSeries = {{ metrics["plots"]["valence"]["data"]  | tojson }};
-							
-							new Chart(document.getElementById("valenceChart"), {
-							  type: "line",
-							  data: {
-								labels: valenceSeries.map((_, i) => i + 1),
-								datasets: [{
-								  label: "Valence",
-								  data: valenceSeries,
-								  tension: 0.2
-								}]
-							  },
-							  options: {
-								responsive: true
-							  }
-							});
-							</script>
-							{% endif %}
+{# ---------- SCRIPTS (AFTER HTML, STILL GUARDED) ---------- #}
+
+			{% if metrics["plots"]["emotion"] is defined %}
+			<script>
+			  const emotionData = {{ metrics["plots"]["emotion"]["data"] | tojson }};
+			  new Chart(document.getElementById("emotionChart"), {
+			    type: "bar",
+			    data: {
+			      labels: Object.keys(emotionData),
+			      datasets: [{
+			        data: Object.values(emotionData),
+			        backgroundColor: "#8ecae6"
+			      }]
+			    },
+			    options: { responsive: true, maintainAspectRatio: false }
+			  });
+			</script>
+			{% endif %}
+
+			{% if metrics["plots"]["moral"] is defined %}
+			<script>
+			  const moralData = {{ metrics["plots"]["moral"]["data"] | tojson }};
+			  new Chart(document.getElementById("moralChart"), {
+			    type: "pie",
+			    data: {
+			      labels: Object.keys(moralData),
+			      datasets: [{
+			        data: Object.values(moralData),
+			        backgroundColor: ["#adb5bd", "#74c0fc"]
+			      }]
+			    },
+			    options: { responsive: true }
+			  });
+			</script>
+			{% endif %}
+
+			{% if metrics["plots"]["valence"] is defined %}
+			<script>
+			  const valenceSeries = {{ metrics["plots"]["valence"]["data"] | tojson }};
+			  new Chart(document.getElementById("valenceChart"), {
+			    type: "line",
+			    data: {
+			      labels: valenceSeries.map((_, i) => i + 1),
+			      datasets: [{ data: valenceSeries, tension: 0.2 }]
+			    },
+			    options: { responsive: true }
+			  });
+			</script>
+			{% endif %}
+
+{% endif %}
 
 
 	<div class="col-6 col-12-medium">
@@ -353,6 +346,7 @@
             <script src="{{ url_for('static', filename='js//main.js') }}"></script>
 </body>
 </html>
+
 
 
 
