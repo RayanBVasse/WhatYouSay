@@ -2191,6 +2191,22 @@ input, select, textarea {
   margin-bottom: 0.5rem;
 }
 
+/* Level A: keep valence timeline readable (not full-bleed oversized) */
+.visual-row.full-width .visual-block {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.visual-row.full-width .visual-block img {
+  width: 100%;
+  max-width: 760px;
+  max-height: 360px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 0.75rem;
+}
+
 
 
 
