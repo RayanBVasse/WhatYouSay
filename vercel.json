@@ -15,7 +15,7 @@
   "crons": [
     {
       "path": "/WhatYouSay/cron/cleanup",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
