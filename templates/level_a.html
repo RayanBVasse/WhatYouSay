@@ -93,22 +93,21 @@
 <hr>
 </section>
 			
-		{% if metrics["plots"] is defined %}
+		{% if metrics["files"] is defined %}
 
 <section class="visual-section">
 
   {# ---------- ROW 1: Emotion + Moral ---------- #}
   <div class="visual-row two-col">
 
-		    {% if metrics["plots"]["emotion"] is defined
-		       and metrics["plots"]["emotion"]["type"] == "data"
-		       and metrics["plots"]["emotion"]["data"] is defined %}
+		    {% if metrics["files"]["emotion_distribution"] is defined and metrics["files"]["emotion_distribution"] %}
 		
 		    <div class="visual-block">
 		      <h3>Emotion distribution</h3>
-		      <div class="chart-container">
-		        <canvas id="emotionChart"></canvas>
-		      </div>
+		      <img
+		        src="{{ url_for('serve_results', safe_user=safe_user, filename=metrics['files']['emotion_distribution']) }}"
+		        alt="Emotion distribution chart"
+		      >
 		      <p class="caption">
 		        This chart shows how emotional signals are distributed across your messages.
 		      </p>
@@ -116,15 +115,14 @@
 		
 		    {% endif %}
 
-		    {% if metrics["plots"]["moral"] is defined
-		       and metrics["plots"]["moral"]["type"] == "data"
-		       and metrics["plots"]["moral"]["data"] is defined %}
+		    {% if metrics["files"]["moral_loading"] is defined and metrics["files"]["moral_loading"] %}
 		
 		    <div class="visual-block">
 		      <h3>Moral / value framing</h3>
-		      <div class="chart-container">
-		        <canvas id="moralChart"></canvas>
-		      </div>
+		      <img
+		        src="{{ url_for('serve_results', safe_user=safe_user, filename=metrics['files']['moral_loading']) }}"
+		        alt="Moral loading chart"
+		      >
 		      <p class="caption">
 		        This view captures how often your language reflects values or evaluative judgement.
 		      </p>
@@ -135,16 +133,15 @@
   </div>
 
 		  {# ---------- ROW 2: Valence timeline ---------- #}
-		  {% if metrics["plots"]["valence"] is defined
-		     and metrics["plots"]["valence"]["type"] == "data"
-		     and metrics["plots"]["valence"]["data"] is defined %}
+		  {% if metrics["files"]["valence_timeline"] is defined and metrics["files"]["valence_timeline"] %}
 		
 		  <div class="visual-row full-width">
 		    <div class="visual-block">
 		      <h3>Emoji valence timeline</h3>
-		      <div class="chart-container">
-		        <canvas id="valenceChart"></canvas>
-		      </div>
+		      <img
+		        src="{{ url_for('serve_results', safe_user=safe_user, filename=metrics['files']['valence_timeline']) }}"
+		        alt="Valence timeline chart"
+		      >
 		      <p class="caption">
 		        This timeline tracks emotional signalling through emojis over time.
 		      </p>
@@ -154,56 +151,6 @@
 		  {% endif %}
 
 </section>
-
-{# ---------- SCRIPTS (AFTER HTML, STILL GUARDED) ---------- #}
-
-			{% if metrics["plots"]["emotion"] is defined %}
-			<script>
-			  const emotionData = {{ metrics["plots"]["emotion"]["data"] | tojson }};
-			  new Chart(document.getElementById("emotionChart"), {
-			    type: "bar",
-			    data: {
-			      labels: Object.keys(emotionData),
-			      datasets: [{
-			        data: Object.values(emotionData),
-			        backgroundColor: "#8ecae6"
-			      }]
-			    },
-			    options: { responsive: true, maintainAspectRatio: false }
-			  });
-			</script>
-			{% endif %}
-
-			{% if metrics["plots"]["moral"] is defined %}
-			<script>
-			  const moralData = {{ metrics["plots"]["moral"]["data"] | tojson }};
-			  new Chart(document.getElementById("moralChart"), {
-			    type: "pie",
-			    data: {
-			      labels: Object.keys(moralData),
-			      datasets: [{
-			        data: Object.values(moralData),
-			        backgroundColor: ["#adb5bd", "#74c0fc"]
-			      }]
-			    },
-			    options: { responsive: true }
-			  });
-			</script>
-			{% endif %}
-
-			{% if metrics["plots"]["valence"] is defined %}
-			<script>
-			  const valenceSeries = {{ metrics["plots"]["valence"]["data"] | tojson }};
-			  new Chart(document.getElementById("valenceChart"), {
-			    type: "line",
-			    data: {
-			      labels: valenceSeries.map((_, i) => i + 1),
-			      datasets: [{ data: valenceSeries, tension: 0.2 }]
-			    },
-			    options: { responsive: true }
-			  });
-			</script>
-			{% endif %}
 
 {% endif %}
 
@@ -231,12 +178,17 @@
 				<button class="button" type="submit">Exit</button>
 				</form>
 				<br><h3>OR</h3>
-				{% if not paid %}
-				<a href="{{ url_for('pay') }}" class="button">Pay with PayPal</a>
-				<button disabled style="opacity:0.5;">Welcome to Level B</button>
+				{% if paywall_enabled %}
+					{% if not paid %}
+					<a href="{{ url_for('pay') }}" class="button">Pay with PayPal</a>
+					<button disabled style="opacity:0.5;">Welcome to Level B</button>
+					{% else %}
+					<button disabled style="opacity:0.5;">Payment confirmed</button>
+					<a href="{{ url_for('level_b_intro') }}" class="button">Welcome to Level B</a>
+					{% endif %}
 				{% else %}
-				<button disabled style="opacity:0.5;">Payment confirmed</button>
-				<a href="{{ url_for('level_b_intro') }}" class="button">Welcome to Level B</a>
+				<button disabled style="opacity:0.5;">PayPal disabled for now</button>
+				<button disabled style="opacity:0.5;">Level B coming soon</button>
 				{% endif %}
 				<hr>
 			</footer>

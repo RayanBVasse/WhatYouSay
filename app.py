@@ -31,6 +31,7 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"txt"}
 MAX_FILE_MB = 5
+PAYWALL_ENABLED = os.environ.get("PAYWALL_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -292,7 +293,7 @@ def upload():
     session["user_handle"] = resolved_user_handle      # EXACT speaker label (IO needs this)
     session["safe_user"] = safe_user                   # canonical safe id (folders/urls)
     session["platform"] = platform
-    session["paid"] = False
+    session["paid"] = (not PAYWALL_ENABLED)
 
     store.safe_upsert_run({
         "run_id": run_id,
@@ -375,7 +376,8 @@ def level_a():
         metrics=metrics,
         user_handle=user_handle,
         safe_user=safe_user,
-        paid=session.get("paid", False)
+        paid=session.get("paid", False),
+        paywall_enabled=PAYWALL_ENABLED,
     )
 
 
@@ -405,7 +407,7 @@ def level_b_intro():
     if not session.get("parsed_data"):
         return redirect(url_for("index"))
 
-    if not session.get("paid", False):
+    if PAYWALL_ENABLED and (not session.get("paid", False)):
         return redirect(url_for("level_a"))
 
     return render_template(
@@ -421,7 +423,7 @@ def level_b_intro():
 def level_b():
     if not session.get("parsed_data"):
         return redirect(url_for("index"))
-    if not session.get("paid", False):
+    if PAYWALL_ENABLED and (not session.get("paid", False)):
         return redirect(url_for("level_a"))
 
     parsed_payload = session.get("parsed_data")
@@ -459,6 +461,8 @@ def level_b():
 def pay():
     if not session.get("parsed_data"):
         return redirect(url_for("index"))
+    if not PAYWALL_ENABLED:
+        return redirect(url_for("level_a"))
     return render_template("paypal_stub.html")
 
 
@@ -466,6 +470,8 @@ def pay():
 def paypal_confirm():
     if not session.get("parsed_data"):
         return redirect(url_for("index"))
+    if not PAYWALL_ENABLED:
+        return redirect(url_for("level_a"))
     session["paid"] = True
     return redirect(url_for("level_a"))
 
