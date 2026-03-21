@@ -168,6 +168,42 @@ def load_level_a_metrics(run_id: str):
         return None
 
 
+def load_result_text(run_id: str, filename: str):
+    if not store.ready:
+        return None
+    object_path = f"{run_id}/{filename}"
+    try:
+        raw = store.download_bytes(store.results_bucket, object_path)
+    except Exception:
+        return None
+    if isinstance(raw, bytes):
+        return raw.decode("utf-8", errors="replace")
+    return str(raw)
+
+
+def load_result_json(run_id: str, filename: str):
+    txt = load_result_text(run_id, filename)
+    if not txt:
+        return None
+    try:
+        return json.loads(txt)
+    except Exception:
+        return None
+
+
+def save_result_json(run_id: str, filename: str, payload: dict):
+    if not store.ready:
+        return
+    object_path = f"{run_id}/{filename}"
+    data = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
+    store.upload_bytes(
+        bucket=store.results_bucket,
+        path=object_path,
+        data=data,
+        content_type="application/json",
+    )
+
+
 def _extract_bearer_token(header_value: str) -> str:
     if not header_value:
         return ""
@@ -468,32 +504,64 @@ def level_b():
     if PAYWALL_ENABLED and (not session.get("paid", False)):
         return redirect(url_for("level_a"))
 
-    parsed_payload = session.get("parsed_data")
-    if not isinstance(parsed_payload, dict):
-        return render_template(
-            "error.html",
-            message="Level B is temporarily unavailable on this deployment while storage migration is in progress.",
-        )
+    run_id = session.get("run_id")
+    safe_user = session.get("safe_user")
+    user_handle = session.get("user_handle")
+    if not run_id or not safe_user:
+        return redirect(url_for("index"))
 
-    # Generate Level-B narrative once per session
-    if "levelB_narrative" not in session:
-        from levelB_runner import generate_levelB_narrative
+    # Reuse existing Level B output if available (avoids repeat LLM calls).
+    report = load_result_json(run_id, "levelB_output.json")
 
-        report = generate_levelB_narrative(
-            anon_text=parsed_payload["anon_text"],
-            self_text=parsed_payload["self_text"],
-            metrics=session["metrics"],
-            evidence=session.get("evidence", {}),  # optional, empty for now
-            speaker_alias=session.get("safe_user"),
-        )
+    if report is None:
+        anon_filename = f"{safe_user}_anonymized_chat.txt"
+        self_filename = f"{safe_user}_only_chat.txt"
+        anon_text = load_result_text(run_id, anon_filename)
+        self_text = load_result_text(run_id, self_filename)
+        metrics = load_level_a_metrics(run_id)
 
-        session["levelB_narrative"] = report
+        if not anon_text or not self_text or not metrics:
+            return render_template(
+                "error.html",
+                message="Level B needs completed Level A artifacts. Please run Level A first and try again.",
+            )
+
+        try:
+            store.safe_update_run(run_id, {"status": "levelb_running"})
+            from levelB_runner import generate_levelB_narrative
+
+            report = generate_levelB_narrative(
+                anon_text=anon_text,
+                self_text=self_text,
+                metrics=metrics,
+                evidence={},
+                speaker_alias=safe_user,
+            )
+
+            try:
+                save_result_json(run_id, "levelB_output.json", report)
+            except Exception as e:
+                print(f"[Level B save warning] {e}")
+
+            store.safe_update_run(
+                run_id,
+                {
+                    "status": "levelb_done",
+                    "levelb_path": f"{run_id}/levelB_output.json",
+                },
+            )
+        except Exception as e:
+            store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
+            return render_template(
+                "error.html",
+                message=f"Level B generation failed. Please try again. Details: {e}",
+            )
 
     return render_template(
         "level_b.html",
-        levelB_report=session["levelB_narrative"],
-        user_handle=session.get("user_handle"),
-        safe_user=session.get("safe_user")
+        levelB_report=report,
+        user_handle=user_handle,
+        safe_user=safe_user
     )
 
 # -----------------------------
