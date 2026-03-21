@@ -7,7 +7,7 @@ The system operates in two stages:
 Level A — quantitative, deterministic analysis
 Level B — structured, interpretive analysis built on Level A outputs
 
-Overview
+Overview 
 
 WYS analyzes exported chat logs (e.g. WhatsApp .txt files) and produces structured reports focused on:
 -communication style
