@@ -311,11 +311,16 @@ def upload():
         platform=platform,
         char_count=char_count,
         line_count=line_count,
+        message_count=total_messages,
         total_messages=total_messages,
         user_messages=user_messages,
         user_share=user_share,
         warnings=warnings,
-        speaker_data=speaker_data
+        speaker_data=speaker_data,
+        ranked_speakers=speaker_data.get("ranked", []),
+        chart_labels=speaker_data.get("chart_labels", []),
+        chart_values=speaker_data.get("chart_values", []),
+        chart_percentages=speaker_data.get("chart_percentages", []),
     )
 
 # -----------------------------
