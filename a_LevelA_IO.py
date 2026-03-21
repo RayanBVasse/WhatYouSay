@@ -26,7 +26,7 @@ MIN_CONTRIBUTION_PCT = 2.0  # threshold for "substantial contributors"
 # ================================
 
 TIMESTAMP_PATTERN = re.compile(
-    r'^(?P<ts>\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4},\s\d{1,2}:\d{2}.*)\s-\s(?P<body>.+)$'
+    r'^\[?(?P<ts>\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4},\s\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APMapm]{2})?)\]?\s?(?:-\s)?(?P<body>.+)$'
 )
 
 SPEAKER_PATTERN = re.compile(r'^(?P<speaker>[^:]+):\s(?P<text>.*)$')
@@ -43,58 +43,70 @@ def is_system_message(text):
 def extract_emojis(text):
     return [c for c in text if c in emoji.EMOJI_DATA]
 
+def _read_chat_lines(file_path):
+    # Common WhatsApp exports are usually UTF-8 (sometimes with BOM) or UTF-16.
+    for enc in ("utf-8-sig", "utf-16"):
+        try:
+            with open(file_path, "r", encoding=enc) as f:
+                return f.read().splitlines()
+        except UnicodeError:
+            continue
+
+    # Last-resort fallback: preserve flow and surface parse errors gracefully.
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        return f.read().splitlines()
+
 def parse_whatsapp(file_path):
     messages = []
     current = None
     idx = 0
 
-    with open(file_path, "r", encoding="utf-8") as f:
-        for raw in f:
-            line = raw.strip()
-            if not line:
+    for raw in _read_chat_lines(file_path):
+        line = raw.strip()
+        if not line:
+            continue
+
+        m = TIMESTAMP_PATTERN.match(line)
+        if m:
+            if current:
+                messages.append(current)
+                current = None
+
+            body = m.group("body")
+            if is_system_message(body):
                 continue
 
-            m = TIMESTAMP_PATTERN.match(line)
-            if m:
-                if current:
-                    messages.append(current)
-                    current = None
+            sm = SPEAKER_PATTERN.match(body)
+            if not sm:
+                continue
 
-                body = m.group("body")
-                if is_system_message(body):
-                    continue
+            try:
+                ts = dateparser.parse(m.group("ts"), fuzzy=True)
+            except Exception:
+                ts = None
 
-                sm = SPEAKER_PATTERN.match(body)
-                if not sm:
-                    continue
+            speaker = sm.group("speaker").strip()
+            text = sm.group("text").strip()
 
-                try:
-                    ts = dateparser.parse(m.group("ts"), fuzzy=True)
-                except Exception:
-                    ts = None
+            current = {
+                "id": str(uuid.uuid4()),
+                "speaker": speaker,
+                "speaker_canon": canonicalize(speaker),
+                "timestamp": ts,
+                "text": text,
+                "emojis": extract_emojis(text),
+                "word_count": len(text.split()),
+                "is_question": text.endswith("?"),
+                "idx": idx
+            }
+            idx += 1
+        else:
+            if current:
+                current["text"] += "\n" + line
+                current["word_count"] = len(current["text"].split())
 
-                speaker = sm.group("speaker").strip()
-                text = sm.group("text").strip()
-
-                current = {
-                    "id": str(uuid.uuid4()),
-                    "speaker": speaker,
-                    "speaker_canon": canonicalize(speaker),
-                    "timestamp": ts,
-                    "text": text,
-                    "emojis": extract_emojis(text),
-                    "word_count": len(text.split()),
-                    "is_question": text.endswith("?"),
-                    "idx": idx
-                }
-                idx += 1
-            else:
-                if current:
-                    current["text"] += "\n" + line
-                    current["word_count"] = len(current["text"].split())
-
-        if current:
-            messages.append(current)
+    if current:
+        messages.append(current)
 
     return messages
 

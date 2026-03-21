@@ -216,7 +216,17 @@ def upload():
     save_path = write_temp_chat(run_id, raw_bytes)
 
     # Resolve user -> match against canonicalized speakers from parsed file
-    safe_user, resolved_user_handle, messages, speaker_counts = resolve_user_handle_from_file(save_path, user_handle)
+    try:
+        safe_user, resolved_user_handle, messages, speaker_counts = resolve_user_handle_from_file(save_path, user_handle)
+    except Exception as e:
+        try:
+            store.remove_many(store.upload_bucket, [upload_path])
+        except Exception:
+            pass
+        return render_template(
+            "error.html",
+            message=f"Unable to parse this chat export. Please upload a standard WhatsApp .txt export. Details: {e}",
+        )
     if not safe_user:
         # cleanup upload
         try:
