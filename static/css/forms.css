@@ -8,3 +8,60 @@ input[type="checkbox"] {
   position: static;
   pointer-events: auto;
 }
+
+.file-dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  border: 2px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  background-color: rgba(176, 216, 255, 0.35);
+}
+
+.file-dropzone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-dropzone label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  color: inherit;
+  pointer-events: none;
+}
+
+.file-dropzone-title {
+  font-size: 1rem;
+}
+
+.file-dropzone-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.file-dropzone-message {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #198754;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.file-dropzone-message.is-visible {
+  opacity: 1;
+}
+
+.consent-checkbox {
+  margin: 0 0 12px;
+}

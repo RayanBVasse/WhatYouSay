@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>WhatYouSay-LevelA-Render</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/forms.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div id="page-wrapper">
+  <!-- Header -->
+				<div id="header-wrapper">
+					<div class="container">
+						<div class="row">
+							<div class="col-12">
+
+								<header id="header">
+									<h1><a href="index.html" id="logo">WhatYouSay</a></h1>
+									<nav id="nav">
+										<a href="{{ url_for('index') }}">Homepage</a>
+                                        <a href="#">Method</a>
+                                        <a href="#">Publication</a>
+                                        <a href="#">Privacy</a>
+                                        <a href="#">HowYouConnect</a>
+
+									</nav>
+								</header>
+
+							</div>
+						</div>
+					</div>
+				</div>
+
+<!-- Main -->
+<div id="main">
+<div class="container">
+	<div class="row main-row">
+		<div class="col-12">
+			<section>
+				<h2>Your participation!</h2>
+				<ul class="metrics-list">
+				<li><b>Total messages analysed&nbsp;&nbsp;:&nbsp;&nbsp; <b>{{ metrics.n_messages }}</b></li></b>
+				<li>
+					<b>Analysis reliability&nbsp;&nbsp;:&nbsp;&nbsp;<b>{{ metrics.confidence }}</b></b> 
+					<div class="hint">
+					(Based on the amount of text available for this analysis.)
+					</div>
+				</li>
+				</ul>
+			</section>
+
+		</div>
+		<div class="col-12">
+
+			<section>
+				<h2>What this means (plain language)</h2>
+				<ul class="metrics-list">
+				<li>
+					<h3>Average message length:</h3> <b>Words&nbsp;&nbsp;:</b>  {{ metrics.avg_len_words }}
+					<span class="hint">&nbsp;&nbsp;(How much you tend to say per message)</span>
+				</li>
+				<li>
+					<b>Questions&nbsp;&nbsp;:</b> {{ metrics.question_pct }}%  
+					<span class="hint">&nbsp;&nbsp;(Signals curiosity and engagement)</span>
+				</li>
+				<li>
+					<b>Emoji use&nbsp;&nbsp;:</b> {{ metrics.emoji_pct }}%  
+					<span class="hint">&nbsp;&nbsp;(Light emotional or tone signalling)</span>
+				</li>
+				<li>
+					<b>Overall tone balance&nbsp;&nbsp;:</b> {{ metrics.tone_valence }}  
+					<span class="hint">&nbsp;&nbsp;(A neutral-to-positive balance is common)</span>
+				</li>
+				</ul>
+			</section>
+		</div>
+			
+<hr class="section-divider">
+			
+<section class="charts">
+	<h2>Visual summaries</h2>
+	<p class="caption">The charts below offer a visual snapshot of how your communication unfolds over time.
+	They aren’t meant to diagnose or judge - they’re simply another way of seeing patterns that 
+	are usually invisible in day-to-day conversation. Think of this as a small observational 
+	experiment: the same words you already wrote, viewed from a different angle. You don’t need to 
+	interpret every number or bar. What matters is the overall shape, balance, 
+	and rhythm. Most people find that.....</p>
+<hr>
+</section>
+			
+		{% if metrics["plots"] is defined %}
+
+<section class="visual-section">
+
+  {# ---------- ROW 1: Emotion + Moral ---------- #}
+  <div class="visual-row two-col">
+
+		    {% if metrics["plots"]["emotion"] is defined
+		       and metrics["plots"]["emotion"]["type"] == "data"
+		       and metrics["plots"]["emotion"]["data"] is defined %}
+		
+		    <div class="visual-block">
+		      <h3>Emotion distribution</h3>
+		      <div class="chart-container">
+		        <canvas id="emotionChart"></canvas>
+		      </div>
+		      <p class="caption">
+		        This chart shows how emotional signals are distributed across your messages.
+		      </p>
+		    </div>
+		
+		    {% endif %}
+
+		    {% if metrics["plots"]["moral"] is defined
+		       and metrics["plots"]["moral"]["type"] == "data"
+		       and metrics["plots"]["moral"]["data"] is defined %}
+		
+		    <div class="visual-block">
+		      <h3>Moral / value framing</h3>
+		      <div class="chart-container">
+		        <canvas id="moralChart"></canvas>
+		      </div>
+		      <p class="caption">
+		        This view captures how often your language reflects values or evaluative judgement.
+		      </p>
+		    </div>
+		
+		    {% endif %}
+
+  </div>
+
+		  {# ---------- ROW 2: Valence timeline ---------- #}
+		  {% if metrics["plots"]["valence"] is defined
+		     and metrics["plots"]["valence"]["type"] == "data"
+		     and metrics["plots"]["valence"]["data"] is defined %}
+		
+		  <div class="visual-row full-width">
+		    <div class="visual-block">
+		      <h3>Emoji valence timeline</h3>
+		      <div class="chart-container">
+		        <canvas id="valenceChart"></canvas>
+		      </div>
+		      <p class="caption">
+		        This timeline tracks emotional signalling through emojis over time.
+		      </p>
+		    </div>
+		  </div>
+		
+		  {% endif %}
+
+</section>
+
+{# ---------- SCRIPTS (AFTER HTML, STILL GUARDED) ---------- #}
+
+			{% if metrics["plots"]["emotion"] is defined %}
+			<script>
+			  const emotionData = {{ metrics["plots"]["emotion"]["data"] | tojson }};
+			  new Chart(document.getElementById("emotionChart"), {
+			    type: "bar",
+			    data: {
+			      labels: Object.keys(emotionData),
+			      datasets: [{
+			        data: Object.values(emotionData),
+			        backgroundColor: "#8ecae6"
+			      }]
+			    },
+			    options: { responsive: true, maintainAspectRatio: false }
+			  });
+			</script>
+			{% endif %}
+
+			{% if metrics["plots"]["moral"] is defined %}
+			<script>
+			  const moralData = {{ metrics["plots"]["moral"]["data"] | tojson }};
+			  new Chart(document.getElementById("moralChart"), {
+			    type: "pie",
+			    data: {
+			      labels: Object.keys(moralData),
+			      datasets: [{
+			        data: Object.values(moralData),
+			        backgroundColor: ["#adb5bd", "#74c0fc"]
+			      }]
+			    },
+			    options: { responsive: true }
+			  });
+			</script>
+			{% endif %}
+
+			{% if metrics["plots"]["valence"] is defined %}
+			<script>
+			  const valenceSeries = {{ metrics["plots"]["valence"]["data"] | tojson }};
+			  new Chart(document.getElementById("valenceChart"), {
+			    type: "line",
+			    data: {
+			      labels: valenceSeries.map((_, i) => i + 1),
+			      datasets: [{ data: valenceSeries, tension: 0.2 }]
+			    },
+			    options: { responsive: true }
+			  });
+			</script>
+			{% endif %}
+
+{% endif %}
+
+
+	<div class="col-6 col-12-medium">
+        <article class="blog-post">
+        <h2>Level B preview</h2>
+			
+  <!--  <a href="#"><img src="{{ url_for('static', filename='preview/LevelB_glimpse2.png') }}" alt="Level B preview" class="levelb-preview-img"></a> -->
+        
+			<h3>How you come across.... is even more important!</h3>
+		
+			<p>So far in Level-A analysis 
+		<br><strong><i>Your emotional signature:&nbsp;&nbsp;</i></strong>“Across hundreds of messages, 
+			your emotional tone tends to settle into a stable range. This doesn’t describe mood — it describes style. 
+			Some people communicate with sharp peaks; others with steady presence. You’re closer to the latter.”
+		<br><strong><i>Where pressure shows up: &nbsp;&nbsp;</i></strong>	“Your language becomes more value-driven around specific 
+		topics. This is where conviction, disagreement, or leadership tends to emerge — often without conscious intent.”	
+		<br><strong><i>Your role in group dynamics: &nbsp;&nbsp;</i></strong>	“In group conversations, you tend to occupy a 
+		stabilizing role — contributing steadily rather than dominating or withdrawing.”
+		<br><br><strong> Level B places your emotional tone, pressure points, and narrative role into a broader conversational context.</strong></p>
+              
+			<footer class="controls">
+				<form action="{{ url_for('delete_and_exit') }}" method="post">
+				<button class="button" type="submit">Exit</button>
+				</form>
+				<br><h3>OR</h3>
+				{% if not paid %}
+				<a href="{{ url_for('pay') }}" class="button">Pay with PayPal</a>
+				<button disabled style="opacity:0.5;">Welcome to Level B</button>
+				{% else %}
+				<button disabled style="opacity:0.5;">Payment confirmed</button>
+				<a href="{{ url_for('level_b_intro') }}" class="button">Welcome to Level B</a>
+				{% endif %}
+				<hr>
+			</footer>
+                        </article>
+                        </div>
+					</div>
+				</div>
+				</div>
+</div>
+
+  
+  
+			<!-- Footer -->
+				<div id="footer-wrapper">
+					<div class="container">
+						<div class="row">
+							<div class="col-8 col-12-medium">
+
+								<section>
+									<h2>How about a truckload of links?</h2>
+									<div>
+										<div class="row">
+											<div class="col-3 col-6-medium col-12-small">
+												<ul class="link-list">
+													<li><a href="#">Sed neque nisi consequat</a></li>
+													<li><a href="#">Dapibus sed mattis blandit</a></li>
+													<li><a href="#">Quis accumsan lorem</a></li>
+													<li><a href="#">Suspendisse varius ipsum</a></li>
+													<li><a href="#">Eget et amet consequat</a></li>
+												</ul>
+											</div>
+											<div class="col-3 col-6-medium col-12-small">
+												<ul class="link-list">
+													<li><a href="#">Quis accumsan lorem</a></li>
+													<li><a href="#">Sed neque nisi consequat</a></li>
+													<li><a href="#">Eget et amet consequat</a></li>
+													<li><a href="#">Dapibus sed mattis blandit</a></li>
+													<li><a href="#">Vitae magna sed dolore</a></li>
+												</ul>
+											</div>
+											<div class="col-3 col-6-medium col-12-small">
+												<ul class="link-list">
+													<li><a href="#">Sed neque nisi consequat</a></li>
+													<li><a href="#">Dapibus sed mattis blandit</a></li>
+													<li><a href="#">Quis accumsan lorem</a></li>
+													<li><a href="#">Suspendisse varius ipsum</a></li>
+													<li><a href="#">Eget et amet consequat</a></li>
+												</ul>
+											</div>
+											<div class="col-3 col-6-medium col-12-small">
+												<ul class="link-list">
+													<li><a href="#">Quis accumsan lorem</a></li>
+													<li><a href="#">Sed neque nisi consequat</a></li>
+													<li><a href="#">Eget et amet consequat</a></li>
+													<li><a href="#">Dapibus sed mattis blandit</a></li>
+													<li><a href="#">Vitae magna sed dolore</a></li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								</section>
+
+							</div>
+							<div class="col-4 col-12-medium">
+
+								<section>
+									<h2>Something of interest</h2>
+									<p>Duis neque nisi, dapibus sed mattis quis, rutrum accumsan sed.
+									Suspendisse eu varius nibh. Suspendisse vitae magna eget odio amet
+									mollis justo facilisis quis. Sed sagittis mauris amet tellus gravida
+									lorem ipsum dolor sit blandit.</p>
+									<footer class="controls">
+										<a href="#" class="button">Oh, please continue ....</a>
+									</footer>
+								</section>
+
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12">
+
+								<div id="copyright">
+									&copy; Untitled. All rights reserved. | Design: <a href="http://html5up.net">HTML5 UP</a>
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+
+<!-- Scripts -->
+			<script src="/static/js/jquery.min.js"></script>
+            <script src="/static/js/browser.min.js"></script>
+            <script src="/static/js/breakpoints.min.js"></script>
+            <script src="/static/js/util.js"></script>
+            <script src="{{ url_for('static', filename='js//main.js') }}"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
