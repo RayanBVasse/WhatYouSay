@@ -3,6 +3,7 @@ import sys
 import re
 import tempfile
 import uuid
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from collections import Counter
@@ -148,6 +149,21 @@ def upload_level_a_artifacts(run_id: str, out_dir: Path) -> None:
                 content_type=guess_mime_type(child.name),
             )
 
+
+def load_level_a_metrics(run_id: str):
+    if not store.ready:
+        return None
+    try:
+        raw = store.download_bytes(store.results_bucket, f"{run_id}/metrics_levelA.json")
+    except Exception:
+        return None
+    try:
+        if isinstance(raw, bytes):
+            return json.loads(raw.decode("utf-8"))
+        return json.loads(raw)
+    except Exception:
+        return None
+
 # -----------------------------
 # Routes
 # -----------------------------
@@ -201,9 +217,6 @@ def upload():
 
     # Resolve user -> match against canonicalized speakers from parsed file
     safe_user, resolved_user_handle, messages, speaker_counts = resolve_user_handle_from_file(save_path, user_handle)
-    speaker_data = anonymize_and_rank_speakers(speaker_counts, resolved_user_handle, top_n=10)
-
-    
     if not safe_user:
         # cleanup upload
         try:
@@ -223,6 +236,8 @@ def upload():
             message=f"No match found for '{user_handle}'. "
                     f"Tip: type the name/number as it appears in WhatsApp (any casing/punctuation is fine)."
         )
+
+    speaker_data = anonymize_and_rank_speakers(speaker_counts, resolved_user_handle, top_n=10)
     #print ("Safe User: ", safe_user, "Resolved usr:", resolved_user_handle, "User Handl:", user_handle)
     # Basic stats for confirmation page
     
@@ -309,8 +324,8 @@ def level_a():
     if not run_id or not upload_path or not user_handle or not safe_user:
         return redirect(url_for("index"))
 
-    # Run pipeline once per session (cache in session)
-    if "metrics" not in session:
+    metrics = load_level_a_metrics(run_id)
+    if metrics is None:
         try:
             store.safe_update_run(run_id, {"status": "analyzing"})
 
@@ -335,15 +350,14 @@ def level_a():
                     "metrics_path": f"{run_id}/metrics_levelA.json",
                 },
             )
+            metrics = load_level_a_metrics(run_id) or metrics
         except Exception as e:
             store.safe_update_run(run_id, {"status": "error", "error_message": str(e)})
             return render_template("error.html", message=str(e))
 
-        session["metrics"] = metrics
-
     return render_template(
         "level_a.html",
-        metrics=session["metrics"],
+        metrics=metrics,
         user_handle=user_handle,
         safe_user=safe_user,
         paid=session.get("paid", False)
