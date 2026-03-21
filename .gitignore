@@ -1,0 +1,25 @@
+# Python cache/build
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Local runtime artifacts
+uploads/
+results/
+
+# Local backup snapshots (do not deploy/push)
+_FROZEN*
+
+# Local environment secrets
+.env
+.env.*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
