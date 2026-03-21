@@ -72,3 +72,26 @@ class SupabaseStore:
         except Exception as e:
             print(f"[Supabase runs upsert skipped] {e}")
 
+    def list_runs_older_than(self, cutoff_iso: str, limit: int = 1000) -> List[Dict]:
+        if not self.client:
+            return []
+        result = (
+            self.client.table("runs")
+            .select("run_id,upload_path,created_at,deleted_at,status")
+            .lt("created_at", cutoff_iso)
+            .limit(limit)
+            .execute()
+        )
+        rows = result.data or []
+        return [r for r in rows if r.get("run_id")]
+
+    def delete_run(self, run_id: str) -> None:
+        if not self.client:
+            return
+        self.client.table("runs").delete().eq("run_id", run_id).execute()
+
+    def safe_delete_run(self, run_id: str) -> None:
+        try:
+            self.delete_run(run_id)
+        except Exception as e:
+            print(f"[Supabase runs delete skipped] {e}")

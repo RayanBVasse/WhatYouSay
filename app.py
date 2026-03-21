@@ -4,10 +4,10 @@ import re
 import tempfile
 import uuid
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from collections import Counter
-from flask import ( Flask, render_template, request, redirect, url_for, session, Response)
+from flask import ( Flask, render_template, request, redirect, url_for, session, Response, jsonify)
 from werkzeug.utils import secure_filename
 
 # Shared IO (unchanged)
@@ -32,6 +32,8 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_EXTENSIONS = {"txt"}
 MAX_FILE_MB = 5
 PAYWALL_ENABLED = os.environ.get("PAYWALL_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+CLEANUP_RETENTION_HOURS = int(os.environ.get("CLEANUP_RETENTION_HOURS", "24"))
+CLEANUP_TOKEN = (os.environ.get("CRON_SECRET") or os.environ.get("CLEANUP_TOKEN") or "").strip()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -164,6 +166,46 @@ def load_level_a_metrics(run_id: str):
         return json.loads(raw)
     except Exception:
         return None
+
+
+def _extract_bearer_token(header_value: str) -> str:
+    if not header_value:
+        return ""
+    parts = header_value.split(" ", 1)
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1].strip()
+    return ""
+
+
+def _cron_authorized() -> bool:
+    if not CLEANUP_TOKEN:
+        return False
+    token = _extract_bearer_token(request.headers.get("Authorization", ""))
+    return token == CLEANUP_TOKEN
+
+
+def delete_run_objects(run_id: str, upload_path: str):
+    deleted_upload = 0
+    deleted_results = 0
+    errors = []
+
+    if upload_path:
+        try:
+            store.remove_many(store.upload_bucket, [upload_path])
+            deleted_upload = 1
+        except Exception as e:
+            errors.append(f"upload_remove_failed:{e}")
+
+    if run_id:
+        try:
+            result_paths = store.list_prefix(store.results_bucket, run_id)
+            if result_paths:
+                store.remove_many(store.results_bucket, result_paths)
+                deleted_results = len(result_paths)
+        except Exception as e:
+            errors.append(f"results_remove_failed:{e}")
+
+    return deleted_upload, deleted_results, errors
 
 # -----------------------------
 # Routes
@@ -483,26 +525,18 @@ def paypal_confirm():
 def delete_and_exit():
     run_id = session.get("run_id")
     upload_path = session.get("upload_path")
+    now_iso = datetime.now(timezone.utc).isoformat()
 
-    # delete uploaded object in Supabase
-    if upload_path:
-        try:
-            store.remove_many(store.upload_bucket, [upload_path])
-        except Exception as e:
-            print(f"[Delete upload failed] {e}")
+    _, _, errors = delete_run_objects(run_id, upload_path)
+    if errors:
+        print(f"[Delete errors] {'; '.join(errors)}")
 
-    # delete result objects in Supabase
     if run_id:
+        # Prefer hard delete for privacy; fallback to soft marker if schema/rules differ.
         try:
-            result_paths = store.list_prefix(store.results_bucket, run_id)
-            store.remove_many(store.results_bucket, result_paths)
-        except Exception as e:
-            print(f"[Delete results failed] {e}")
-
-        store.safe_update_run(
-            run_id,
-            {"status": "deleted", "deleted_at": datetime.now(timezone.utc).isoformat()},
-        )
+            store.delete_run(run_id)
+        except Exception:
+            store.safe_update_run(run_id, {"status": "deleted", "deleted_at": now_iso})
 
     # delete local temp files if present
     chat_path = session.get("chat_path")
@@ -514,6 +548,65 @@ def delete_and_exit():
 
     session.clear()
     return redirect(url_for("index"))
+
+
+@app.route("/WhatYouSay/cron/cleanup", methods=["GET"])
+def cron_cleanup():
+    if not CLEANUP_TOKEN:
+        return jsonify({"ok": False, "error": "cleanup_token_not_configured"}), 500
+
+    if not _cron_authorized():
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+
+    if not store.ready:
+        return jsonify({"ok": False, "error": "storage_not_configured"}), 500
+
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=CLEANUP_RETENTION_HOURS)
+    rows = store.list_runs_older_than(cutoff.isoformat(), limit=1000)
+
+    scanned = len(rows)
+    runs_processed = 0
+    uploads_deleted = 0
+    result_objects_deleted = 0
+    row_deletes = 0
+    errors = []
+
+    for row in rows:
+        run_id = row.get("run_id")
+        upload_path = row.get("upload_path")
+        if not run_id:
+            continue
+
+        du, dr, err = delete_run_objects(run_id, upload_path)
+        uploads_deleted += du
+        result_objects_deleted += dr
+        if err:
+            errors.extend([f"{run_id}:{e}" for e in err])
+
+        try:
+            store.delete_run(run_id)
+            row_deletes += 1
+        except Exception as e:
+            errors.append(f"{run_id}:row_delete_failed:{e}")
+            store.safe_update_run(run_id, {"status": "deleted", "deleted_at": now.isoformat()})
+
+        runs_processed += 1
+
+    return jsonify(
+        {
+            "ok": True,
+            "retention_hours": CLEANUP_RETENTION_HOURS,
+            "cutoff_utc": cutoff.isoformat(),
+            "scanned_rows": scanned,
+            "runs_processed": runs_processed,
+            "uploads_deleted": uploads_deleted,
+            "result_objects_deleted": result_objects_deleted,
+            "rows_deleted": row_deletes,
+            "errors_count": len(errors),
+            "errors_sample": errors[:20],
+        }
+    )
 
 
 if __name__ == "__main__":

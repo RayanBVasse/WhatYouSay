@@ -11,5 +11,11 @@
       "src": "/(.*)",
       "dest": "app.py"
     }
+  ],
+  "crons": [
+    {
+      "path": "/WhatYouSay/cron/cleanup",
+      "schedule": "0 */6 * * *"
+    }
   ]
 }
