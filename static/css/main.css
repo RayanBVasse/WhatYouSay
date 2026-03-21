@@ -2173,7 +2173,7 @@ input, select, textarea {
 }
 
 .visual-row.two-col {
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   align-items: start;
 }
 
@@ -2189,6 +2189,22 @@ input, select, textarea {
 
 .visual-block h3 {
   margin-bottom: 0.5rem;
+}
+
+/* Level A: keep Emotion + Moral charts visually balanced */
+.visual-row.two-col .visual-block {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.visual-row.two-col .visual-block img {
+  width: 100%;
+  max-width: 560px;
+  max-height: 360px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 0.75rem;
 }
 
 /* Level A: keep valence timeline readable (not full-bleed oversized) */
