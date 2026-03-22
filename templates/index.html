@@ -18,6 +18,11 @@
       .upload-actions {
         margin-top: 0.8rem;
       }
+      .button.is-disabled {
+        opacity: 0.5;
+        pointer-events: none;
+        cursor: not-allowed;
+      }
       .preview-strip {
         margin-top: 1.6rem;
       }
@@ -206,7 +211,7 @@
                     </div>
 
                     <div class="upload-actions">
-                      <button id="upload-submit-btn" type="submit" class="button" disabled>Upload &amp; Confirm</button>
+                      <button id="upload-submit-btn" type="submit" class="button is-disabled" aria-disabled="true">Upload &amp; Confirm</button>
                     </div>
                   </form>
                 </div>
@@ -280,19 +285,21 @@
     </div>
 
     <script>
-      const fileInput = document.getElementById("text-file");
-      const fileMessage = document.getElementById("file-dropzone-message");
-      const consentBox = document.getElementById("consent-box");
-      const uploadSubmitBtn = document.getElementById("upload-submit-btn");
-      const uploadForm = document.getElementById("upload-form");
+      var fileInput = document.getElementById("text-file");
+      var fileMessage = document.getElementById("file-dropzone-message");
+      var consentBox = document.getElementById("consent-box");
+      var uploadSubmitBtn = document.getElementById("upload-submit-btn");
+      var uploadForm = document.getElementById("upload-form");
 
       function syncUploadButtonState() {
         if (!uploadSubmitBtn || !consentBox) return;
-        uploadSubmitBtn.disabled = !consentBox.checked;
+        var allowed = !!consentBox.checked;
+        uploadSubmitBtn.classList.toggle("is-disabled", !allowed);
+        uploadSubmitBtn.setAttribute("aria-disabled", allowed ? "false" : "true");
       }
 
       if (fileInput && fileMessage) {
-        fileInput.addEventListener("change", () => {
+        fileInput.addEventListener("change", function () {
           if (fileInput.files && fileInput.files.length > 0) {
             fileMessage.textContent = "The file has been successfully received.";
             fileMessage.classList.add("is-visible");
@@ -308,10 +315,14 @@
       }
 
       if (uploadForm) {
-        uploadForm.addEventListener("submit", (event) => {
+        uploadForm.addEventListener("submit", function (event) {
           if (consentBox && !consentBox.checked) {
             event.preventDefault();
             syncUploadButtonState();
+            if (fileMessage) {
+              fileMessage.textContent = "Please tick consent before uploading.";
+              fileMessage.classList.add("is-visible");
+            }
           }
         });
       }
