@@ -26,50 +26,159 @@
         pointer-events: none;
         cursor: not-allowed;
       }
-      .preview-strip {
-        margin-top: 1.6rem;
-      }
       .main-row {
         position: relative;
         z-index: 20;
       }
-      .preview-row {
-        position: relative;
-        z-index: 10;
-        pointer-events: none;
+      .preview-inline {
+        margin-top: 1rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid #dce8ef;
       }
-      .preview-row .preview-strip,
-      .preview-row .preview-strip * {
-        pointer-events: auto;
+      .preview-inline h3 {
+        margin-bottom: 0.25rem;
       }
-      .preview-strip h2 {
-        margin-bottom: 0.4rem;
+      .preview-inline-sub {
+        margin-bottom: 0.5rem;
+        font-size: 0.82em;
+        color: #6f8590;
       }
-      .preview-strip p {
-        margin-bottom: 0.8rem;
-      }
-      .preview-grid {
+      .inline-preview-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem;
       }
-      .preview-card {
+      .inline-preview-tile {
         background: #f5f9fc;
         border: 1px solid #d9e7ef;
-        border-radius: 10px;
-        padding: 0.75rem;
+        border-radius: 8px;
+        padding: 0.35rem;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
       }
-      .preview-card h3 {
-        margin-bottom: 0.4rem;
+      .inline-preview-tile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(8, 38, 51, 0.14);
       }
-      .preview-card img {
+      .preview-zoom-trigger {
+        display: block;
+        position: relative;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #d5e4ee;
+        background: #fdfefe;
+        cursor: zoom-in;
+        margin-bottom: 0;
+      }
+      .preview-zoom-trigger img {
         width: 100%;
-        height: 140px;
-        object-fit: cover;
-        object-position: top center;
+        height: 100px;
+        object-fit: contain;
+        object-position: center center;
+        display: block;
+        transition: transform 0.28s ease, filter 0.2s ease;
+      }
+      .preview-zoom-trigger:hover img {
+        transform: scale(1.06);
+        filter: contrast(1.03);
+      }
+      .zoom-badge {
+        position: absolute;
+        top: 7px;
+        right: 7px;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: rgba(8, 81, 104, 0.9);
+        border: 1px solid rgba(198, 233, 245, 0.85);
+        box-shadow: 0 2px 7px rgba(0, 0, 0, 0.26);
+        transition: transform 0.18s ease, background 0.18s ease;
+      }
+      .zoom-badge::before {
+        content: "";
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 8px;
+        height: 8px;
+        border: 2px solid #e9f8ff;
+        border-radius: 50%;
+      }
+      .zoom-badge::after {
+        content: "";
+        position: absolute;
+        top: 13px;
+        left: 14px;
+        width: 7px;
+        height: 2px;
+        background: #e9f8ff;
+        border-radius: 2px;
+        transform: rotate(45deg);
+        transform-origin: left center;
+      }
+      .preview-zoom-trigger:hover .zoom-badge {
+        transform: scale(1.08);
+        background: rgba(12, 142, 173, 0.96);
+      }
+      .inline-preview-caption {
+        margin: 0.25rem 0 0;
+        font-size: 0.75em;
+        line-height: 1.25;
+        color: #536b76;
+        text-align: center;
+      }
+      .preview-lightbox {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(10, 20, 26, 0.86);
+        z-index: 5000;
+      }
+      .preview-lightbox.is-open {
+        display: flex;
+      }
+      .preview-lightbox-inner {
+        width: min(980px, 95vw);
+        max-height: 92vh;
+        background: #f6fbff;
         border: 1px solid #d5e4ee;
         border-radius: 8px;
-        margin-bottom: 0.45rem;
+        padding: 0.7rem;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      }
+      .preview-lightbox-img-wrap {
+        width: 100%;
+        max-height: 78vh;
+        overflow: auto;
+        border-radius: 6px;
+        background: #ffffff;
+        border: 1px solid #d7e6ef;
+      }
+      .preview-lightbox img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .preview-lightbox-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+      .preview-lightbox-title {
+        font-size: 1.1em;
+        color: #214a5a;
+      }
+      .preview-lightbox-close {
+        border: 0;
+        background: #0e8dac;
+        color: #fff;
+        border-radius: 6px;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.95em;
+        cursor: pointer;
       }
       #footer-wrapper.compact-footer {
         padding: 1.2em 0 1em;
@@ -97,13 +206,16 @@
         padding: 0.9em 0 0 0;
       }
       @media (max-width: 980px) {
-        .preview-grid {
+        .inline-preview-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
       @media (max-width: 720px) {
-        .preview-grid {
-          grid-template-columns: 1fr;
+        .inline-preview-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .preview-zoom-trigger img {
+          height: 88px;
         }
       }
     </style>
@@ -262,34 +374,55 @@
                   This tool does not provide advice, diagnosis, or evaluation of individuals.
                   It reports descriptive patterns in text and interaction structure only.
                 </p>
-              </section>
-            </div>
-          </div>
 
-          <div class="row preview-row">
-            <div class="col-12">
-              <section class="preview-strip compact-text">
-                <h2>Preview the outputs before uploading</h2>
-                <p>Sample screenshots of Level A and Level B outputs (illustrative only).</p>
-                <div class="preview-grid">
-                  <article class="preview-card">
-                    <h3>Level A snapshot</h3>
-                    <img src="/static/preview/level-a%20sample.jpg" alt="Level A sample output">
-                    <p>Deterministic metrics and visual pattern summaries.</p>
-                  </article>
-                  <article class="preview-card">
-                    <h3>Level B emotions</h3>
-                    <img src="/static/preview/level-b_emotions_sample.jpg" alt="Level B emotions sample output">
-                    <p>Emotion evidence cards generated from your uploaded text.</p>
-                  </article>
-                  <article class="preview-card">
-                    <h3>Level B narrative</h3>
-                    <img src="/static/preview/level-b_narrative_sample.jpg" alt="Level B narrative sample output">
-                    <p>Reflective narrative synthesis grounded in Level A signals.</p>
-                  </article>
+                <div class="preview-inline">
+                  <h3>Output glimpses</h3>
+                  <p class="preview-inline-sub">Hover to zoom. Click to enlarge.</p>
+                  <div class="inline-preview-grid">
+                    <article class="inline-preview-tile">
+                      <a class="preview-zoom-trigger" href="/static/preview/level-a_sample.jpg" data-preview-title="Level A snapshot">
+                        <span class="zoom-badge" aria-hidden="true"></span>
+                        <img src="/static/preview/level-a_sample.jpg" alt="Level A sample output">
+                      </a>
+                      <p class="inline-preview-caption">Level A summary</p>
+                    </article>
+                    <article class="inline-preview-tile">
+                      <a class="preview-zoom-trigger" href="/static/preview/level-b_emotions_sample.jpg" data-preview-title="Level B emotions">
+                        <span class="zoom-badge" aria-hidden="true"></span>
+                        <img src="/static/preview/level-b_emotions_sample.jpg" alt="Level B emotions sample output">
+                      </a>
+                      <p class="inline-preview-caption">Level B emotions</p>
+                    </article>
+                    <article class="inline-preview-tile">
+                      <a class="preview-zoom-trigger" href="/static/preview/level-b_narrative_sample.jpg" data-preview-title="Level B narrative">
+                        <span class="zoom-badge" aria-hidden="true"></span>
+                        <img src="/static/preview/level-b_narrative_sample.jpg" alt="Level B narrative sample output">
+                      </a>
+                      <p class="inline-preview-caption">Level B narrative</p>
+                    </article>
+                    <article class="inline-preview-tile">
+                      <a class="preview-zoom-trigger" href="/static/preview/LevelB_glimpse2.png" data-preview-title="Level B detailed glimpse">
+                        <span class="zoom-badge" aria-hidden="true"></span>
+                        <img src="/static/preview/LevelB_glimpse2.png" alt="Level B detailed layout glimpse">
+                      </a>
+                      <p class="inline-preview-caption">Level B detailed layout</p>
+                    </article>
+                  </div>
                 </div>
               </section>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="preview-lightbox" class="preview-lightbox" aria-hidden="true">
+        <div class="preview-lightbox-inner" role="dialog" aria-modal="true" aria-label="Preview image">
+          <div class="preview-lightbox-top">
+            <div id="preview-lightbox-title" class="preview-lightbox-title">Preview</div>
+            <button id="preview-lightbox-close" class="preview-lightbox-close" type="button">Close</button>
+          </div>
+          <div class="preview-lightbox-img-wrap">
+            <img id="preview-lightbox-img" src="" alt="Preview image enlarged">
           </div>
         </div>
       </div>
@@ -366,6 +499,55 @@
         }
 
         syncUploadButtonState();
+      });
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var lightbox = document.getElementById("preview-lightbox");
+        var lightboxImg = document.getElementById("preview-lightbox-img");
+        var lightboxTitle = document.getElementById("preview-lightbox-title");
+        var closeBtn = document.getElementById("preview-lightbox-close");
+        var triggers = document.querySelectorAll(".preview-zoom-trigger");
+
+        function closeLightbox() {
+          if (!lightbox) return;
+          lightbox.classList.remove("is-open");
+          lightbox.setAttribute("aria-hidden", "true");
+          if (lightboxImg) lightboxImg.src = "";
+        }
+
+        if (triggers && lightbox && lightboxImg && lightboxTitle) {
+          triggers.forEach(function (anchor) {
+            anchor.addEventListener("click", function (event) {
+              event.preventDefault();
+              var src = anchor.getAttribute("href");
+              var title = anchor.getAttribute("data-preview-title") || "Preview";
+              lightboxImg.src = src;
+              lightboxTitle.textContent = title;
+              lightbox.classList.add("is-open");
+              lightbox.setAttribute("aria-hidden", "false");
+            });
+          });
+        }
+
+        if (closeBtn) {
+          closeBtn.addEventListener("click", closeLightbox);
+        }
+
+        if (lightbox) {
+          lightbox.addEventListener("click", function (event) {
+            if (event.target === lightbox) {
+              closeLightbox();
+            }
+          });
+        }
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeLightbox();
+          }
+        });
       });
     </script>
 
