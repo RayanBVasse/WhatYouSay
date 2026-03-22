@@ -267,6 +267,31 @@
       line-height: 1.45;
       font-style: italic;
     }
+    .quote-list.is-hidden {
+      display: none;
+    }
+    .evidence-controls {
+      margin: 10px 0 12px;
+      padding: 10px;
+      border: 1px solid #d9e4eb;
+      border-radius: 10px;
+      background: #f7fafc;
+    }
+    .evidence-toggle-btn {
+      border: 1px solid #2f8cab;
+      border-radius: 8px;
+      padding: 5px 10px;
+      color: #0f5f77;
+      background: #eef8fd;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .evidence-note {
+      margin: 8px 0 0;
+      color: #55676f;
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
 
     .pill {
       display: inline-block;
@@ -383,6 +408,11 @@
 
               <h4>What this is not</h4>
               <p>This system reports communication patterns. It is not a clinical, psychiatric, or diagnostic tool.</p>
+              <p>
+                Outputs are descriptive summaries based on statistical patterning. They are not evidence, assessments,
+                or evaluations of individuals. They should not be used in legal, clinical, employment, or interpersonal
+                dispute contexts.
+              </p>
 
               <h4>References</h4>
               <ul class="refs-list">
@@ -432,6 +462,10 @@
           <section class="side-card">
             <h3>Emotions</h3>
             <p>From your Level A analysis: top emotional signals in this run.</p>
+            <div class="evidence-controls">
+              <button id="quoteToggleBtn" class="evidence-toggle-btn" type="button">Show evidence quotes</button>
+              <p id="quoteWarningNote" class="evidence-note">Quotes may be identifiable to group members if shared.</p>
+            </div>
             <div class="chart-wrap">
               <canvas id="emotionMiniChart" aria-label="Top 3 emotion chart"></canvas>
             </div>
@@ -444,7 +478,7 @@
                 </div>
                 <div class="signal-desc">{{ item.description }}</div>
                 {% if item.examples %}
-                <ul class="quote-list">
+                <ul class="quote-list is-hidden">
                   {% for q in item.examples %}
                   <li>"{{ q }}"</li>
                   {% endfor %}
@@ -472,7 +506,7 @@
                 </div>
                 <div class="signal-desc">{{ item.description }}</div>
                 {% if item.examples %}
-                <ul class="quote-list">
+                <ul class="quote-list is-hidden">
                   {% for q in item.examples %}
                   <li>"{{ q }}"</li>
                   {% endfor %}
@@ -559,6 +593,31 @@
           }
         }
       });
+    }
+
+    const quoteToggleBtn = document.getElementById('quoteToggleBtn');
+    const quoteLists = Array.from(document.querySelectorAll('.quote-list'));
+    function setQuoteVisibility(showQuotes) {
+      quoteLists.forEach((el) => {
+        el.classList.toggle('is-hidden', !showQuotes);
+      });
+      if (quoteToggleBtn) {
+        quoteToggleBtn.textContent = showQuotes ? 'Hide evidence quotes' : 'Show evidence quotes';
+      }
+    }
+    if (quoteToggleBtn && quoteLists.length > 0) {
+      let showingQuotes = false;
+      setQuoteVisibility(showingQuotes);
+      quoteToggleBtn.addEventListener('click', () => {
+        showingQuotes = !showingQuotes;
+        setQuoteVisibility(showingQuotes);
+      });
+    } else if (quoteToggleBtn) {
+      quoteToggleBtn.style.display = 'none';
+      const note = document.getElementById('quoteWarningNote');
+      if (note) {
+        note.textContent = 'No evidence quotes available for this run.';
+      }
     }
   })();
 </script>
