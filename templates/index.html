@@ -144,7 +144,7 @@
               <section>
                 <h2>Upload text for analysis</h2>
                 <div class="form-wrapper">
-                  <form method="POST" action="/WhatYouSay/upload" enctype="multipart/form-data">
+                  <form id="upload-form" method="POST" action="/WhatYouSay/upload" enctype="multipart/form-data">
                     <div>
                       <label><strong>User handle</strong></label><br>
                       <input type="text" name="user_handle" required>
@@ -191,7 +191,7 @@
 
                     <div class="consent-checkbox">
                       <label>
-                        <input type="checkbox" name="consent" required>
+                        <input type="checkbox" id="consent-box" name="consent" required>
                         I confirm the following
                       </label>
                     </div>
@@ -206,7 +206,7 @@
                     </div>
 
                     <div class="upload-actions">
-                      <button type="submit" class="button">Upload &amp; Confirm</button>
+                      <button id="upload-submit-btn" type="submit" class="button" disabled>Upload &amp; Confirm</button>
                     </div>
                   </form>
                 </div>
@@ -282,6 +282,14 @@
     <script>
       const fileInput = document.getElementById("text-file");
       const fileMessage = document.getElementById("file-dropzone-message");
+      const consentBox = document.getElementById("consent-box");
+      const uploadSubmitBtn = document.getElementById("upload-submit-btn");
+      const uploadForm = document.getElementById("upload-form");
+
+      function syncUploadButtonState() {
+        if (!uploadSubmitBtn || !consentBox) return;
+        uploadSubmitBtn.disabled = !consentBox.checked;
+      }
 
       if (fileInput && fileMessage) {
         fileInput.addEventListener("change", () => {
@@ -294,6 +302,21 @@
           }
         });
       }
+
+      if (consentBox) {
+        consentBox.addEventListener("change", syncUploadButtonState);
+      }
+
+      if (uploadForm) {
+        uploadForm.addEventListener("submit", (event) => {
+          if (consentBox && !consentBox.checked) {
+            event.preventDefault();
+            syncUploadButtonState();
+          }
+        });
+      }
+
+      syncUploadButtonState();
     </script>
 
     <script src="/static/js/jquery.min.js"></script>

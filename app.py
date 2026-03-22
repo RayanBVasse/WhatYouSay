@@ -57,6 +57,10 @@ def canonicalize_handle(s: str) -> str:
     return s
 
 
+def digits_only(s: str) -> str:
+    return re.sub(r"\D+", "", (s or ""))
+
+
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -87,6 +91,29 @@ def resolve_user_handle_from_file(chat_path: str, user_input: str):
             canonical_map[key] = sp
 
     resolved = canonical_map.get(safe_user)
+
+    # Fallback for phone-style handles:
+    # if user enters a phone number variant (+44..., 07..., spaced/dashed),
+    # try unique suffix-style matching on digits.
+    if resolved is None:
+        user_digits = digits_only(user_input)
+        if len(user_digits) >= 7:
+            candidates = []
+            for sp in speakers.keys():
+                sp_digits = digits_only(sp)
+                if len(sp_digits) < 7:
+                    continue
+                if (
+                    sp_digits == user_digits
+                    or sp_digits.endswith(user_digits)
+                    or user_digits.endswith(sp_digits)
+                    or (len(sp_digits) >= 9 and len(user_digits) >= 9 and sp_digits[-9:] == user_digits[-9:])
+                ):
+                    candidates.append(sp)
+
+            if len(candidates) == 1:
+                resolved = candidates[0]
+
     return safe_user, resolved, messages, speakers
 
 def anonymize_and_rank_speakers( speaker_counts: dict, resolved_user_handle: str, top_n: int = 10):
@@ -546,7 +573,8 @@ def upload():
         return render_template(
             "error.html",
             message=f"No match found for '{user_handle}'. "
-                    f"Tip: type the name/number exactly as it appears in the exported chat (any casing/punctuation is fine)."
+                    f"Tip: type the name/number exactly as it appears in the exported chat "
+                    f"(any casing/punctuation is fine). For phone handles, try full number or last 9-10 digits."
         )
 
     speaker_data = anonymize_and_rank_speakers(speaker_counts, resolved_user_handle, top_n=10)
