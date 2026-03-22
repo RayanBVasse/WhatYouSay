@@ -1,193 +1,205 @@
-<!DOCTYPE HTML>
-
+﻿<!DOCTYPE HTML>
 <html>
-	<head>
-		<title>WhatYouSay</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<!--<link rel="stylesheet" href="css/main.css" />-->
-		<link rel="stylesheet" href="/static/css/main.css" />
-		<link rel="stylesheet" href="/static/css/forms.css" />
-	</head>
-	<body>
-		<div id="page-wrapper">
+  <head>
+    <title>WhatYouSay</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="stylesheet" href="/static/css/forms.css" />
+  </head>
+  <body>
+    <div id="page-wrapper">
 
-			<!-- Header -->
-				<div id="header-wrapper">
-					<div class="container">
-						<div class="row">
-							<div class="col-12">
+      <div id="header-wrapper">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <header id="header">
+                <h1><a href="index.html" id="logo">WhatYouSay</a></h1>
+                <nav id="nav">
+                  <a href="#" class="current-page-item">Homepage</a>
+                  <a href="#">Method</a>
+                  <a href="#">Publication</a>
+                  <a href="#">Privacy</a>
+                  <a href="#">HowWeConnect</a>
+                </nav>
+              </header>
+            </div>
+          </div>
+        </div>
+      </div>
 
-								<header id="header">
-									<h1><a href="index.html" id="logo">WhatYouSay</a></h1>
-									<nav id="nav">
-										<a href="#" class="current-page-item">Homepage</a>
-										<a href="#">Method</a>
-										<a href="#">Publication</a>
-										<a href="#">Privacy</a>
-										<a href="#">HowWeConnect</a>
-									</nav>
-								</header>
+      <div id="banner-wrapper">
+        <div class="container">
+          <div id="banner">
+            <h2>Fully Automated AI-Driven Text Interaction Analysis</h2>
+            <span>
+              Upload exported conversations or text logs (.txt).<br>
+              AI-generated interpretation of single user and group dynamics.<br>
+              Supports common export formats from WhatsApp, Telegram, Signal, and similar chat platforms.
+            </span>
+          </div>
+        </div>
+      </div>
 
-							</div>
-						</div>
-					</div>
-				</div>
+      <div id="main">
+        <div class="container">
+          <div class="row main-row">
+            <div class="col-4 col-12-medium">
+              <section class="compact-text">
+                <h2>What this is</h2>
+                <p>
+                  All processing is performed by scripts and language models.
+                  There is no human review, moderation, or manual intervention at any stage.
+                </p>
 
-			<!-- Banner -->
-				<div id="banner-wrapper">
-					<div class="container">
-						<div id="banner">
-							<h2>Fully Automated AI-Driven Text Interaction Analysis</h2>
-							<span>Upload exported conversations or text logs. <br>AI-generated interpretation of single user & group dynamics</br>
-							<br>Receive a structured analysis of linguistic presence and interaction patterns.</br></span>
-						</div>
-					</div>
-				</div>
+                <h2>How data is handled</h2>
+                <p>
+                  This is a fully automated, research-grade text analysis system.
+                  Uploaded files are processed temporarily on secure cloud infrastructure.
+                  Raw uploads and generated result files are stored in private storage only for processing.
+                  All uploaded content, generated outputs, and associated run records are deleted automatically
+                  within 24 hours, or immediately when you use <strong>Delete &amp; Exit</strong>.
+                </p>
 
-			<!-- Main -->
-				<div id="main">
-					<div class="container">
-						<div class="row main-row">
-							<div class="col-4 col-12-medium">
+                <h2>Legal and responsible use</h2>
+                <p>
+                  By uploading, you confirm you are authorized to process this data and that you comply with
+                  applicable privacy and data-protection laws. Do not upload unlawful, non-consensual, or
+                  sensitive data you are not permitted to process. The platform operator is not responsible for
+                  unlawful uploads by users.
+                </p>
+              </section>
+            </div>
 
-							<section class="compact-text">
-								<h2>What this is</h2>
-								All processing is performed by scripts and language models.
-								There is no human review, moderation, or manual intervention at any stage..</p>
-								
-								<h2>How data is handled</h2>
-								This is a fully automated, research-grade text analysis system.
-								Uploaded files are processed temporarily on secure cloud infrastructure.
-								Raw uploads and generated result files are stored in private storage only for processing.
-								All uploaded content, generated outputs, and associated run records are deleted automatically within 24 hours, or immediately when you use <strong>Delete &amp; Exit</strong>.</p>
-							</section>
+            <div class="col-4 col-6-medium col-12-small">
+              <section>
+                <h2>Upload text for analysis</h2>
+                <div class="form-wrapper">
+                  <form method="POST" action="/WhatYouSay/upload" enctype="multipart/form-data">
+                    <div>
+                      <label><strong>User handle</strong></label><br>
+                      <input type="text" name="user_handle" required>
+                    </div>
+                    <br>
 
-							</div>
-							
-						<div class="col-4 col-6-medium col-12-small">
-							<section>
-								<h2>Upload text for analysis</h2>
-								<div class="form-wrapper">
-								<form method="POST" action="/WhatYouSay/upload" enctype="multipart/form-data">
-									<div>
-									<label><strong>User handle</strong></label><br>
-									<input type="text" name="user_handle" required>
-								</div>
-								<br>
-								<div>
-									<label><strong>Export source</strong></label><br>
-									<label>
-									<input type="radio" name="platform" value="android" required>
-									WhatsApp (Android)
-									</label><br>
-									<label>
-									<input type="radio" name="platform" value="ios">
-									WhatsApp (iOS)
-									</label>
-								</div>
-								<br>
-								<div>
-									<label><strong>Text file (.txt)</strong></label><br>
-										<div class="file-dropzone">
-										<input type="file" id="text-file" name="text" accept=".txt" required>
-										<label for="text-file">
-											<span class="file-dropzone-title">Drag &amp; drop file here</span>
-											<span class="file-dropzone-subtitle">or click to browse</span>
-									</label>
-										</div>
-									<div id="file-dropzone-message" class="file-dropzone-message" role="status" aria-live="polite"></div>
-								</div>
-								<br>
-									<div class="consent-checkbox">
-									<label>
-										<input type="checkbox" name="consent" required>
-										I confirm the following
-									</label>
-								</div>
-								<div class="compact-text">	
-						By uploading a file, you confirm that you are the legal owner or have explicit permission from the conversation participant(s) 
-						to analyze this data. Uploaded content and generated outputs are automatically deleted within 24 hours (or earlier on request). 
-						You are solely responsible for the content you upload
-								</div>
-								<button type="submit" class="button">
-									Upload & Confirm
-								</button>							
-								</form>
-								</div>
-									
-						</section>
+                    <div>
+                      <label><strong>Export source</strong></label><br>
+                      <label>
+                        <input type="radio" name="platform" value="android" required>
+                        WhatsApp (Android)
+                      </label><br>
+                      <label>
+                        <input type="radio" name="platform" value="ios">
+                        WhatsApp (iOS)
+                      </label><br>
+                      <label>
+                        <input type="radio" name="platform" value="telegram">
+                        Telegram (.txt export)
+                      </label><br>
+                      <label>
+                        <input type="radio" name="platform" value="signal">
+                        Signal (.txt export)
+                      </label><br>
+                      <label>
+                        <input type="radio" name="platform" value="other">
+                        Other chat export (.txt)
+                      </label>
+                    </div>
+                    <br>
 
-							</div>
-							<div class="col-4 col-6-medium col-12-small">
-							<section class="compact-text">
-								<h2>Transparency</h2>
-								The analysis pipeline is implemented in open-source scripts.
-								The codebase is available on GitHub for inspection by technically trained users.
-								Outputs reflect model behavior and statistical patterning — not human judgment..</p>
-								
-								<h2>What this is not</h2>
-								This is a fully automated, research-grade text analysis system.
-								The analysis pipeline is implemented in open-source scripts.
-								This tool does not provide advice, diagnosis, or evaluation of individuals.
-								It reports descriptive patterns in text and interaction structure only</p>
-							</section>
+                    <div>
+                      <label><strong>Text file (.txt)</strong></label><br>
+                      <div class="file-dropzone">
+                        <input type="file" id="text-file" name="text" accept=".txt" required>
+                        <label for="text-file">
+                          <span class="file-dropzone-title">Drag &amp; drop file here</span>
+                          <span class="file-dropzone-subtitle">or click to browse</span>
+                        </label>
+                      </div>
+                      <div id="file-dropzone-message" class="file-dropzone-message" role="status" aria-live="polite"></div>
+                    </div>
+                    <br>
 
-							
-							</div>
-						</div>
-					</div>
-				</div>
+                    <div class="consent-checkbox">
+                      <label>
+                        <input type="checkbox" name="consent" required>
+                        I confirm the following
+                      </label>
+                    </div>
 
-			<!-- Footer -->
-				<div id="footer-wrapper">
-					<div class="container">
-						<div class="row">
-							<div class="col-8 col-12-medium">
-							
-							</div>
-							<div class="col-4 col-12-medium">
+                    <div class="compact-text">
+                      By uploading a file, you confirm that you are the legal owner or have explicit permission from
+                      the conversation participant(s) to analyze this data. Uploaded content and generated outputs are
+                      automatically deleted within 24 hours (or earlier on request). You are solely responsible for the
+                      content you upload and for legal compliance in your jurisdiction.
+                    </div>
 
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-12">
-							
-							<div id="copyright">
-								&copy; WhatYouSay. All rights reserved. | Source: <a href="http://living-literature.org">Living Literature</a>
-							</div>
-							</div>
-						</div>
-					</div>
-				</div>
+                    <button type="submit" class="button">Upload &amp; Confirm</button>
+                  </form>
+                </div>
+              </section>
+            </div>
 
-		</div>
+            <div class="col-4 col-6-medium col-12-small">
+              <section class="compact-text">
+                <h2>Transparency</h2>
+                <p>
+                  The analysis pipeline is implemented in open-source scripts.
+                  The codebase is available on GitHub for inspection by technically trained users.
+                  Outputs reflect model behavior and statistical patterning - not human judgment.
+                </p>
 
-		<!-- Scripts -->
-<script>
-	const fileInput = document.getElementById("text-file");
-	const fileMessage = document.getElementById("file-dropzone-message");
+                <h2>What this is not</h2>
+                <p>
+                  This tool does not provide advice, diagnosis, or evaluation of individuals.
+                  It reports descriptive patterns in text and interaction structure only.
+                </p>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
 
-	if (fileInput && fileMessage) {
-		fileInput.addEventListener("change", () => {
-			if (fileInput.files && fileInput.files.length > 0) {
-				fileMessage.textContent = "The file has been successfully received.";
-				fileMessage.classList.add("is-visible");
-			} else {
-				fileMessage.textContent = "";
-				fileMessage.classList.remove("is-visible");
-			}
-		});
-	}
-</script>
+      <div id="footer-wrapper">
+        <div class="container">
+          <div class="row">
+            <div class="col-8 col-12-medium"></div>
+            <div class="col-4 col-12-medium"></div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div id="copyright">
+                &copy; WhatYouSay. All rights reserved. | Source: <a href="http://living-literature.org">Living Literature</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
+    </div>
 
-		
-				<script src="/static/js/jquery.min.js"></script>
-<script src="/static/js/browser.min.js"></script>
-<script src="/static/js/breakpoints.min.js"></script>
-<script src="/static/js/util.js"></script>
-<script src="/static/js/main.js"></script>
+    <script>
+      const fileInput = document.getElementById("text-file");
+      const fileMessage = document.getElementById("file-dropzone-message");
 
-	</body>
+      if (fileInput && fileMessage) {
+        fileInput.addEventListener("change", () => {
+          if (fileInput.files && fileInput.files.length > 0) {
+            fileMessage.textContent = "The file has been successfully received.";
+            fileMessage.classList.add("is-visible");
+          } else {
+            fileMessage.textContent = "";
+            fileMessage.classList.remove("is-visible");
+          }
+        });
+      }
+    </script>
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/browser.min.js"></script>
+    <script src="/static/js/breakpoints.min.js"></script>
+    <script src="/static/js/util.js"></script>
+    <script src="/static/js/main.js"></script>
+  </body>
 </html>

@@ -475,7 +475,7 @@ def upload():
         return render_template("error.html", message="No file selected.")
 
     if not allowed_file(file.filename):
-        return render_template("error.html", message="Please upload a .txt WhatsApp export.")
+        return render_template("error.html", message="Please upload a .txt chat export (WhatsApp, Telegram, Signal, or similar).")
 
     if not store.ready:
         return render_template("error.html", message="Server storage is not configured. Please try again later.")
@@ -509,7 +509,7 @@ def upload():
             pass
         return render_template(
             "error.html",
-            message=f"Unable to parse this chat export. Please upload a standard WhatsApp .txt export. Details: {e}",
+            message=f"Unable to parse this chat export. Please upload a standard .txt export (WhatsApp/Telegram/Signal). Details: {e}",
         )
     if not safe_user:
         # cleanup upload
@@ -528,7 +528,7 @@ def upload():
         return render_template(
             "error.html",
             message=f"No match found for '{user_handle}'. "
-                    f"Tip: type the name/number as it appears in WhatsApp (any casing/punctuation is fine)."
+                    f"Tip: type the name/number exactly as it appears in the exported chat (any casing/punctuation is fine)."
         )
 
     speaker_data = anonymize_and_rank_speakers(speaker_counts, resolved_user_handle, top_n=10)

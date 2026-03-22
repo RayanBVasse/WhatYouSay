@@ -25,16 +25,47 @@ MIN_CONTRIBUTION_PCT = 2.0  # threshold for "substantial contributors"
 # PARSER
 # ================================
 
-TIMESTAMP_PATTERN = re.compile(
-    r'^\[?(?P<ts>\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4},\s\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APMapm]{2})?)\]?\s?(?:-\s)?(?P<body>.+)$'
+# Telegram speaker-first export:
+# "Name, [31.03.2026 09:14:22] text..."
+SPEAKER_FIRST_PATTERN = re.compile(
+    r'^(?P<speaker>.+?),\s*\[(?P<ts>\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4}\s\d{1,2}:\d{2}(?::\d{2})?)\]\s*(?P<text>.*)$'
 )
 
-SPEAKER_PATTERN = re.compile(r'^(?P<speaker>[^:]+):\s(?P<text>.*)$')
+# Timestamp-first exports (WhatsApp, Telegram .txt variants, generic logs)
+TIMESTAMP_PATTERNS = [
+    # WhatsApp typical:
+    # [31/03/2026, 9:14] - Name: text
+    re.compile(
+        r'^\[?(?P<ts>\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4},\s\d{1,2}:\d{2}(?::\d{2})?(?:\s?[APMapm]{2})?)\]?\s?(?:-\s)?(?P<body>.+)$'
+    ),
+    # Telegram bracket timestamp:
+    # [31.03.2026 09:14:22] Name: text
+    re.compile(
+        r'^\[(?P<ts>\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4}\s\d{1,2}:\d{2}(?::\d{2})?)\]\s?(?P<body>.+)$'
+    ),
+    # Generic date-time with optional dash:
+    # 31.03.2026 09:14 - Name: text
+    re.compile(
+        r'^(?P<ts>\d{1,2}[\/\.]\d{1,2}[\/\.]\d{2,4}\s\d{1,2}:\d{2}(?::\d{2})?)\s?(?:-\s)?(?P<body>.+)$'
+    ),
+    # ISO-like:
+    # 2026-03-31 09:14:22 - Name: text
+    re.compile(
+        r'^\[?(?P<ts>\d{4}-\d{2}-\d{2}\s\d{1,2}:\d{2}(?::\d{2})?)\]?\s?(?:-\s)?(?P<body>.+)$'
+    ),
+]
+
+SPEAKER_PATTERNS = [
+    re.compile(r'^(?P<speaker>[^:]{1,120}):\s(?P<text>.*)$'),
+    re.compile(r'^(?P<speaker>[^-]{1,120})\s-\s(?P<text>.+)$'),
+]
 
 SYSTEM_HINTS = [
     "added", "removed", "left", "joined", "created group",
-    "changed the subject", "changed the description",
-    "end-to-end encrypted", "missed call", "deleted this message"
+    "changed the subject", "changed the description", "changed group photo",
+    "changed group name", "end-to-end encrypted", "missed call", "video call",
+    "deleted this message", "message was deleted", "joined using this group's invite link",
+    "pinned", "security code changed"
 ]
 
 def is_system_message(text):
@@ -56,7 +87,24 @@ def _read_chat_lines(file_path):
     with open(file_path, "r", encoding="utf-8", errors="replace") as f:
         return f.read().splitlines()
 
-def parse_whatsapp(file_path):
+def _parse_timestamp_first_line(line: str):
+    for pat in TIMESTAMP_PATTERNS:
+        m = pat.match(line)
+        if not m:
+            continue
+        return m.group("ts"), m.group("body")
+    return None, None
+
+
+def _parse_speaker_and_text(body: str):
+    for pat in SPEAKER_PATTERNS:
+        sm = pat.match(body or "")
+        if sm:
+            return sm.group("speaker").strip(), sm.group("text").strip()
+    return None, None
+
+
+def parse_chat_export(file_path):
     messages = []
     current = None
     idx = 0
@@ -66,27 +114,56 @@ def parse_whatsapp(file_path):
         if not line:
             continue
 
-        m = TIMESTAMP_PATTERN.match(line)
-        if m:
+        # Telegram speaker-first format
+        sf = SPEAKER_FIRST_PATTERN.match(line)
+        if sf:
             if current:
                 messages.append(current)
                 current = None
 
-            body = m.group("body")
-            if is_system_message(body):
-                continue
+            speaker = sf.group("speaker").strip()
+            text = (sf.group("text") or "").strip()
+            ts_raw = sf.group("ts")
 
-            sm = SPEAKER_PATTERN.match(body)
-            if not sm:
+            if is_system_message(text):
                 continue
 
             try:
-                ts = dateparser.parse(m.group("ts"), fuzzy=True)
+                ts = dateparser.parse(ts_raw, fuzzy=True)
             except Exception:
                 ts = None
 
-            speaker = sm.group("speaker").strip()
-            text = sm.group("text").strip()
+            current = {
+                "id": str(uuid.uuid4()),
+                "speaker": speaker,
+                "speaker_canon": canonicalize(speaker),
+                "timestamp": ts,
+                "text": text,
+                "emojis": extract_emojis(text),
+                "word_count": len(text.split()),
+                "is_question": text.endswith("?"),
+                "idx": idx
+            }
+            idx += 1
+            continue
+
+        ts_raw, body = _parse_timestamp_first_line(line)
+        if ts_raw is not None:
+            if current:
+                messages.append(current)
+                current = None
+
+            if is_system_message(body):
+                continue
+
+            speaker, text = _parse_speaker_and_text(body)
+            if not speaker:
+                continue
+
+            try:
+                ts = dateparser.parse(ts_raw, fuzzy=True)
+            except Exception:
+                ts = None
 
             current = {
                 "id": str(uuid.uuid4()),
@@ -110,6 +187,11 @@ def parse_whatsapp(file_path):
 
     return messages
 
+
+def parse_whatsapp(file_path):
+    # Backwards compatibility alias.
+    return parse_chat_export(file_path)
+
 def canonicalize(s: str) -> str:
     if not s:
         return ""
@@ -131,7 +213,7 @@ def level_a_stats(self_msgs):
 # MAIN
 # ================================
 def load_chat_from_file(file_path: str):
-    msgs = parse_whatsapp(file_path)
+    msgs = parse_chat_export(file_path)
     if not msgs:
         raise ValueError("No messages parsed from file")
     return msgs
