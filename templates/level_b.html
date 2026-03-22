@@ -1,167 +1,368 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Level B Report – WhatYouSay</title>
+  <title>Level B Results - WhatYouSay</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" href="/static/css/main.css">
   <link rel="stylesheet" href="/static/css/forms.css">
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .report-shell {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+    .intro-card {
+      background: #f6f8fa;
+      border: 1px solid #d9e0e6;
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+    .intro-card h2 {
+      margin-bottom: 8px;
+      color: #0a7ea0;
+      letter-spacing: 0.02em;
+    }
+    .intro-lead {
+      margin: 0;
+      font-size: 1.12rem;
+      color: #3d4f56;
+      font-style: italic;
+      line-height: 1.6;
+    }
+    .intro-note {
+      margin-top: 10px;
+      color: #5d6b72;
+      font-size: 0.98rem;
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .main-stack,
+    .side-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .section-card {
+      border: 1px solid #d5dee3;
+      border-radius: 12px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+    .section-head {
+      padding: 14px 18px;
+      border-left: 6px solid #1787a8;
+      background: #f9fcfd;
+    }
+    .section-head h3 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+    .section-body {
+      padding: 16px 18px 10px;
+      color: #2f3c42;
+      line-height: 1.75;
+      white-space: normal;
+    }
+    .section-body p {
+      margin: 0;
+      white-space: pre-line;
+    }
+
+    .section-foot {
+      border-top: 1px solid #e5ecef;
+      background: #f5f8fb;
+      padding: 12px 18px 14px;
+    }
+    .section-foot h4 {
+      margin: 0 0 6px 0;
+      color: #4c5f66;
+      font-size: 1rem;
+    }
+    .tight-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #39474d;
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .tone-1 .section-head { border-left-color: #1f7aa0; }
+    .tone-2 .section-head { border-left-color: #2e8c9f; }
+    .tone-3 .section-head { border-left-color: #4c7ea8; }
+    .tone-4 .section-head { border-left-color: #7b72b7; }
+    .tone-5 .section-head { border-left-color: #c86a7f; }
+
+    .closing-card {
+      border: 1px solid #d5dee3;
+      border-radius: 12px;
+      background: #f2f7fb;
+      padding: 16px 18px;
+    }
+    .closing-card h3 {
+      margin-bottom: 8px;
+    }
+
+    .hwc-card {
+      border: 1px solid #f0d3b5;
+      border-left: 6px solid #f48f3a;
+      border-radius: 12px;
+      background: #fff8f1;
+      padding: 16px 18px;
+    }
+    .hwc-card h3 {
+      margin-bottom: 8px;
+    }
+    .hwc-muted {
+      color: #6c7278;
+      font-size: 0.92rem;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .side-card {
+      border: 1px solid #d5dee3;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 14px;
+    }
+    .side-card h3 {
+      margin-bottom: 8px;
+    }
+    .side-card > p {
+      color: #54656d;
+      margin-bottom: 10px;
+    }
+
+    .signal-card {
+      border: 1px solid #e0e7ec;
+      border-radius: 10px;
+      background: #f9fbfd;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .signal-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: baseline;
+      font-weight: 700;
+      color: #1f3340;
+      margin-bottom: 4px;
+    }
+    .signal-desc {
+      color: #54656d;
+      font-size: 0.92rem;
+      margin-bottom: 6px;
+    }
+    .quote-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #3b4a50;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      font-style: italic;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: #e2edf4;
+      color: #2e4f63;
+    }
+
+    @media (max-width: 980px) {
+      .report-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
 <div id="page-wrapper">
-  <!-- Header -->
-				<div id="header-wrapper">
-					<div class="container">
-						<div class="row">
-							<div class="col-12">
+  <div id="header-wrapper">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <header id="header">
+            <h1><a href="{{ url_for('index') }}" id="logo">WhatYouSay</a></h1>
+            <nav id="nav">
+              <a href="{{ url_for('index') }}">Homepage</a>
+              <a href="#">Method</a>
+              <a href="#">Publication</a>
+              <a href="#">Privacy</a>
+              <a href="#">HowWeConnect</a>
+            </nav>
+          </header>
+        </div>
+      </div>
+    </div>
+  </div>
 
-								<header id="header">
-									<h1><a href="index.html" id="logo">WhatYouSay</a></h1>
-									<nav id="nav">
-										<a href="{{ url_for('index') }}">Homepage</a>
-                                        <a href="#">Method</a>
-                                        <a href="#">Publication</a>
-                                        <a href="#">Privacy</a>
-                                        <a href="#">HowYouConnect</a>
+  <div id="main">
+    <div class="container report-shell">
+      <section class="intro-card">
+        <h2>Level B Results</h2>
+        <p class="intro-lead">
+          What follows is a reflective interpretation of your communication patterns in this group.
+        </p>
+        <p class="intro-note">
+          This is not a diagnosis or judgment. It is a narrative lens on how you show up, connect,
+          and influence group dynamics.
+        </p>
+      </section>
 
-									</nav>
-								</header>
+      <div class="report-grid">
+        <div class="main-stack">
+          {% for section in levelB_report.sections %}
+          {% set section_title = section.title | lower %}
+          <article class="section-card tone-{{ loop.index if loop.index <= 5 else 5 }}">
+            <div class="section-head">
+              <h3>{{ section.title }}</h3>
+            </div>
+            <div class="section-body">
+              <p>{{ section.body }}</p>
+            </div>
+            {% if section.highlights %}
+            <div class="section-foot">
+              <h4>
+                {% if 'practical upgrades' in section_title %}
+                  What could be better (small, doable)
+                {% else %}
+                  Quick takeaways
+                {% endif %}
+              </h4>
+              <ul class="tight-list">
+                {% for h in section.highlights %}
+                <li>{{ h }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+          </article>
+          {% endfor %}
 
-							</div>
-						</div>
-					</div>
-				</div>
+          {% if levelB_report.closing_note %}
+          <section class="closing-card">
+            <h3>Closing note</h3>
+            <p>{{ levelB_report.closing_note }}</p>
+          </section>
+          {% endif %}
 
-       <!-- Main -->
+          <section class="hwc-card">
+            <h3>Looking Ahead - HWC</h3>
+            <p>
+              Patterns do not stand still. HWC extends this analysis across time,
+              showing how participation, tone, and relational role evolve over multiple windows.
+            </p>
+            <ul class="tight-list">
+              <li>Participation shifts over phases.</li>
+              <li>Moments where tone stabilizes or destabilizes group climate.</li>
+              <li>Early signals of role transitions.</li>
+            </ul>
+            <p class="hwc-muted">HWC is a longitudinal extension and is currently in progress.</p>
+            <div class="action-row">
+              <button class="button" disabled>HWC - Coming Soon</button>
+              <button class="button" disabled>Download Results (ZIP)</button>
+              <form action="{{ url_for('delete_and_exit') }}" method="post">
+                <button class="button" type="submit">Delete My Data</button>
+              </form>
+            </div>
+          </section>
+        </div>
 
-<div id="main">
-<section>
-			  <h2>Level B Results</h2>
-			
-			  {% for section in levelB_report.sections %}
-			    <article style="margin-bottom: 2em;">
-			      <h3>{{ section.title }}</h3>
-			
-			      <p>{{ section.body }}</p>
-			
-			      {% if section.highlights %}
-			        <ul>
-			          {% for h in section.highlights %}
-			            <li>{{ h }}</li>
-			          {% endfor %}
-			        </ul>
-			      {% endif %}
-			    </article>
-			  {% endfor %}
-			
-			  {% if levelB_report.closing_note %}
-			    <hr>
-			    <p><strong>Closing note:</strong> {{ levelB_report.closing_note }}</p>
-			  {% endif %}
-</section>
-<hr>
+        <aside class="side-stack">
+          <section class="side-card">
+            <h3>Emotions</h3>
+            <p>Emotion indicators derived from Level A, with short excerpts for context.</p>
+            {% if sidebar.emotions %}
+              {% for item in sidebar.emotions %}
+              <article class="signal-card">
+                <div class="signal-title">
+                  <span>{{ item.label }}</span>
+                  <span class="pill">{{ item.score_pct }}%</span>
+                </div>
+                <div class="signal-desc">{{ item.description }}</div>
+                {% if item.examples %}
+                <ul class="quote-list">
+                  {% for q in item.examples %}
+                  <li>"{{ q }}"</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </article>
+              {% endfor %}
+            {% else %}
+              <p>No emotion signals available for this run.</p>
+            {% endif %}
+          </section>
 
-<form action="{{ url_for('delete_and_exit') }}" method="post">
-  <button type="submit">Delete & Exit</button>
-</form>
+          <section class="side-card">
+            <h3>Morals</h3>
+            <p>Moral framing detected from Level A value-loading signals.</p>
+            {% if sidebar.morals %}
+              {% for item in sidebar.morals %}
+              <article class="signal-card">
+                <div class="signal-title">
+                  <span>{{ item.label }}</span>
+                  <span class="pill">{{ item.score_pct }}%</span>
+                </div>
+                <div class="signal-desc">{{ item.description }}</div>
+                {% if item.examples %}
+                <ul class="quote-list">
+                  {% for q in item.examples %}
+                  <li>"{{ q }}"</li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </article>
+              {% endfor %}
+            {% else %}
+              <p>No moral loading signal available in this run.</p>
+            {% endif %}
+          </section>
 
-<button disabled>Download ZIP (coming next)</button>
-
+          <section class="side-card">
+            <h3>Group dynamics</h3>
+            <p>Interaction-level indicators comparing your style to broader group patterns.</p>
+            <ul class="tight-list">
+              {% if sidebar.group_points %}
+                {% for gp in sidebar.group_points %}
+                <li>{{ gp }}</li>
+                {% endfor %}
+              {% else %}
+                <li>No group-dynamics summary available.</li>
+              {% endif %}
+              <li>Reliability band: {{ sidebar.confidence }}.</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </div>
 </div>
-           
-			<!-- Footer -->
-				<div id="footer-wrapper">
-					<div class="container">
-						<div class="row">
-							<div class="col-8 col-12-medium">
 
-								<section>
-									<h2>How about a truckload of links?</h2>
-									<div>
-										<div class="row">
-											<div class="col-3 col-6-medium col-12-small">
-												<ul class="link-list">
-													<li><a href="#">Sed neque nisi consequat</a></li>
-													<li><a href="#">Dapibus sed mattis blandit</a></li>
-													<li><a href="#">Quis accumsan lorem</a></li>
-													<li><a href="#">Suspendisse varius ipsum</a></li>
-													<li><a href="#">Eget et amet consequat</a></li>
-												</ul>
-											</div>
-											<div class="col-3 col-6-medium col-12-small">
-												<ul class="link-list">
-													<li><a href="#">Quis accumsan lorem</a></li>
-													<li><a href="#">Sed neque nisi consequat</a></li>
-													<li><a href="#">Eget et amet consequat</a></li>
-													<li><a href="#">Dapibus sed mattis blandit</a></li>
-													<li><a href="#">Vitae magna sed dolore</a></li>
-												</ul>
-											</div>
-											<div class="col-3 col-6-medium col-12-small">
-												<ul class="link-list">
-													<li><a href="#">Sed neque nisi consequat</a></li>
-													<li><a href="#">Dapibus sed mattis blandit</a></li>
-													<li><a href="#">Quis accumsan lorem</a></li>
-													<li><a href="#">Suspendisse varius ipsum</a></li>
-													<li><a href="#">Eget et amet consequat</a></li>
-												</ul>
-											</div>
-											<div class="col-3 col-6-medium col-12-small">
-												<ul class="link-list">
-													<li><a href="#">Quis accumsan lorem</a></li>
-													<li><a href="#">Sed neque nisi consequat</a></li>
-													<li><a href="#">Eget et amet consequat</a></li>
-													<li><a href="#">Dapibus sed mattis blandit</a></li>
-													<li><a href="#">Vitae magna sed dolore</a></li>
-												</ul>
-											</div>
-										</div>
-									</div>
-								</section>
-
-							</div>
-							<div class="col-4 col-12-medium">
-
-								<section>
-									<h2>Something of interest</h2>
-									<p>Duis neque nisi, dapibus sed mattis quis, rutrum accumsan sed.
-									Suspendisse eu varius nibh. Suspendisse vitae magna eget odio amet
-									mollis justo facilisis quis. Sed sagittis mauris amet tellus gravida
-									lorem ipsum dolor sit blandit.</p>
-									<footer class="controls">
-										<a href="#" class="button">Oh, please continue ....</a>
-									</footer>
-								</section>
-
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-12">
-
-								<div id="copyright">
-									&copy; Untitled. All rights reserved. | Design: <a href="http://html5up.net">HTML5 UP</a>
-								</div>
-
-							</div>
-						</div>
-					</div>
-				</div>
-
-
-
-<!-- Scripts -->
-			<script src="/static/js/jquery.min.js"></script>
-            <script src="/static/js/browser.min.js"></script>
-            <script src="/static/js/breakpoints.min.js"></script>
-            <script src="/static/js/util.js"></script>
-            <script src="{{ url_for('static', filename='js//main.js') }}"></script>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/browser.min.js"></script>
+<script src="/static/js/breakpoints.min.js"></script>
+<script src="/static/js/util.js"></script>
+<script src="/static/js/main.js"></script>
 </body>
 </html>
-
-
-
-

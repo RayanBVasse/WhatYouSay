@@ -204,6 +204,173 @@ def save_result_json(run_id: str, filename: str, payload: dict):
     )
 
 
+EMOTION_DESCRIPTIONS = {
+    "joy": "Positive affect, shared enjoyment, and social warmth in your language.",
+    "trust": "Language indicating confidence, alignment, and cooperative intent.",
+    "anticipation": "Forward-looking phrasing linked to plans, expectation, and momentum.",
+    "surprise": "Moments where expectations shift and reactions become more expressive.",
+    "sadness": "Signals of disappointment, concern, or reflective low-tone moments.",
+    "anger": "Sharper or confrontational phrasing under pressure or disagreement.",
+    "fear": "Worry, risk sensitivity, and uncertainty in challenging moments.",
+    "disgust": "Rejection or aversion framing toward ideas, behaviors, or events.",
+    "positive": "Overall positive emotional loading across your messages.",
+    "negative": "Overall negative emotional loading across your messages.",
+}
+
+MORAL_DESCRIPTIONS = {
+    "moral_positive": "Value-forward language around fairness, care, responsibility, and shared norms.",
+    "moral_negative": "Critical or disapproving value language in conflict or disagreement contexts.",
+}
+
+EMOTION_KEYWORDS = {
+    "joy": ["great", "love", "fun", "happy", "nice", "amazing", "yay", "haha", "lol", "thanks", "glad"],
+    "trust": ["agree", "sure", "exactly", "yes", "thanks", "appreciate", "reliable", "trust"],
+    "anticipation": ["will", "going to", "gonna", "soon", "tomorrow", "next", "later", "plan"],
+    "surprise": ["wow", "whoa", "omg", "unexpected", "did not expect", "no way"],
+    "sadness": ["sad", "upset", "sorry", "miss", "disappointed"],
+    "anger": ["angry", "annoyed", "frustrat", "ridiculous", "unfair", "wtf"],
+    "fear": ["worry", "worried", "afraid", "concern", "anxious", "risk"],
+    "disgust": ["disgust", "gross", "awful", "hate"],
+}
+
+MORAL_KEYWORDS = {
+    "moral_positive": ["should", "fair", "care", "respect", "responsib", "ethical", "empathy", "justice", "help"],
+    "moral_negative": ["wrong", "unfair", "blame", "shame", "disgrace", "harm", "bad faith"],
+}
+
+
+def _normalize_space(text: str) -> str:
+    return re.sub(r"\s+", " ", (text or "")).strip()
+
+
+def _clip_text(text: str, max_len: int = 180) -> str:
+    t = _normalize_space(text)
+    if len(t) <= max_len:
+        return t
+    return t[: max_len - 1].rstrip() + "…"
+
+
+def _extract_self_lines(run_id: str, safe_user: str, limit: int = 1200):
+    raw = load_result_text(run_id, f"{safe_user}_only_chat.txt")
+    if not raw:
+        return []
+    out = []
+    for line in raw.splitlines():
+        parts = line.split("\t", 2)
+        txt = parts[2] if len(parts) == 3 else line
+        txt = _normalize_space(txt)
+        if len(txt) >= 8:
+            out.append(txt)
+    return out[-limit:]
+
+
+def _pick_snippets(lines, keywords, limit: int = 3):
+    if not lines:
+        return []
+    kws = [k.lower() for k in (keywords or []) if k]
+    chosen = []
+    seen = set()
+    for ln in lines:
+        low = ln.lower()
+        if kws and (not any(k in low for k in kws)):
+            continue
+        clipped = _clip_text(ln, 170)
+        if clipped.lower() in seen:
+            continue
+        seen.add(clipped.lower())
+        chosen.append(clipped)
+        if len(chosen) >= limit:
+            break
+
+    if chosen:
+        return chosen
+
+    # fallback when no keyword hit: return the most readable short lines
+    for ln in lines:
+        clipped = _clip_text(ln, 140)
+        if clipped.lower() in seen:
+            continue
+        seen.add(clipped.lower())
+        chosen.append(clipped)
+        if len(chosen) >= min(2, limit):
+            break
+    return chosen
+
+
+def _top_items(counter_dict: dict, limit: int = 4, skip_keys=None):
+    skip = set(skip_keys or [])
+    pairs = []
+    for k, v in (counter_dict or {}).items():
+        try:
+            val = float(v)
+        except Exception:
+            continue
+        if val <= 0 or k in skip:
+            continue
+        pairs.append((str(k), val))
+    pairs.sort(key=lambda x: x[1], reverse=True)
+    return pairs[:limit]
+
+
+def build_level_b_sidebar(metrics: dict, self_lines):
+    metrics = metrics or {}
+    emotions_src = metrics.get("emotion_norm") or {}
+    morals_src = metrics.get("moral_norm") or {}
+
+    emotion_items = _top_items(emotions_src, limit=4, skip_keys={"positive", "negative"})
+    if len(emotion_items) < 3:
+        seen = {k for k, _ in emotion_items}
+        for k, v in _top_items(emotions_src, limit=6):
+            if k in seen:
+                continue
+            emotion_items.append((k, v))
+            seen.add(k)
+            if len(emotion_items) >= 4:
+                break
+
+    emotions = []
+    for key, value in emotion_items:
+        k = key.lower()
+        emotions.append(
+            {
+                "label": key.replace("_", " ").title(),
+                "score_pct": round(value * 100, 1),
+                "description": EMOTION_DESCRIPTIONS.get(k, "Emotion signal detected in the conversation."),
+                "examples": _pick_snippets(self_lines, EMOTION_KEYWORDS.get(k, []), limit=3),
+            }
+        )
+
+    moral_items = _top_items(morals_src, limit=2)
+    morals = []
+    for key, value in moral_items:
+        k = key.lower()
+        morals.append(
+            {
+                "label": key.replace("_", " ").title(),
+                "score_pct": round(value * 100, 1),
+                "description": MORAL_DESCRIPTIONS.get(k, "Moral framing signal detected in language use."),
+                "examples": _pick_snippets(self_lines, MORAL_KEYWORDS.get(k, []), limit=2),
+            }
+        )
+
+    mode = metrics.get("mode") or {}
+    role = metrics.get("role") or {}
+    top_mode = _top_items(mode, limit=2)
+    top_role = _top_items(role, limit=2)
+    group_points = []
+    for k, v in top_mode:
+        group_points.append(f"Mode signal: {k.replace('_', ' ')} ({round(v * 100, 1)}%).")
+    for k, v in top_role:
+        group_points.append(f"Role signal: {k.replace('_', ' ')} ({round(v * 100, 1)}%).")
+
+    return {
+        "emotions": emotions,
+        "morals": morals,
+        "group_points": group_points,
+        "confidence": metrics.get("confidence", "unknown"),
+    }
+
+
 def _extract_bearer_token(header_value: str) -> str:
     if not header_value:
         return ""
@@ -584,11 +751,17 @@ def level_b():
             message=f"Level B generation failed ({err_type}). Details: {e}",
         )
 
+    level_a_metrics = load_level_a_metrics(run_id) or {}
+    self_lines = _extract_self_lines(run_id, safe_user)
+    sidebar = build_level_b_sidebar(level_a_metrics, self_lines)
+
     return render_template(
         "level_b.html",
         levelB_report=report,
         user_handle=user_handle,
-        safe_user=safe_user
+        safe_user=safe_user,
+        levela_metrics=level_a_metrics,
+        sidebar=sidebar,
     )
 
 # -----------------------------
