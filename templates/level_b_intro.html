@@ -78,6 +78,20 @@
       flex-wrap: wrap;
       align-items: center;
     }
+    .actions .button[disabled],
+    .actions .button.is-disabled {
+      background-image: none !important;
+      background: #9aa6ad !important;
+      border-color: #8d9aa1 !important;
+      box-shadow: none !important;
+      color: #eef2f4 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+      opacity: 1 !important;
+    }
+    .actions form.is-disabled {
+      pointer-events: none;
+    }
     .log-box {
       display: none;
       margin: 10px 0 14px;
@@ -168,7 +182,7 @@
         <pre class="log-box" id="logBox" aria-live="polite"></pre>
         <div class="actions">
           <button id="startBtn" class="button" type="button" disabled>Start Level B Analysis</button>
-          <form action="{{ url_for('delete_and_exit') }}" method="post">
+          <form id="deleteForm" action="{{ url_for('delete_and_exit') }}" method="post">
             <button id="deleteBtn" class="button" type="submit" disabled>Delete And Exit</button>
           </form>
         </div>
@@ -181,6 +195,7 @@
   const consentChk = document.getElementById("consentChk");
   const startBtn = document.getElementById("startBtn");
   const deleteBtn = document.getElementById("deleteBtn");
+  const deleteForm = document.getElementById("deleteForm");
   const progressShell = document.getElementById("progressShell");
   const progressBar = document.getElementById("progressBar");
   const statusLine = document.getElementById("statusLine");
@@ -191,6 +206,11 @@
     const enabled = consentChk.checked && !isRunning;
     startBtn.disabled = !enabled;
     deleteBtn.disabled = !enabled;
+    startBtn.classList.toggle("is-disabled", !enabled);
+    deleteBtn.classList.toggle("is-disabled", !enabled);
+    if (deleteForm) {
+      deleteForm.classList.toggle("is-disabled", !enabled);
+    }
   }
 
   consentChk.addEventListener("change", () => {
