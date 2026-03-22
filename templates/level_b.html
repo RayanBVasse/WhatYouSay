@@ -7,122 +7,154 @@
 
   <link rel="stylesheet" href="/static/css/main.css">
   <link rel="stylesheet" href="/static/css/forms.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     .report-shell {
       max-width: 1320px;
       margin: 0 auto;
     }
+
     .intro-card {
-      background: #f6f8fa;
-      border: 1px solid #d9e0e6;
+      background: #f3f7fa;
+      border: 1px solid #d9e3e9;
       border-radius: 12px;
-      padding: 22px;
-      margin-bottom: 20px;
+      padding: 20px;
+      margin-bottom: 18px;
     }
     .intro-card h2 {
       margin-bottom: 8px;
       color: #0a7ea0;
-      letter-spacing: 0.02em;
     }
     .intro-lead {
       margin: 0;
-      font-size: 1.12rem;
-      color: #3d4f56;
-      font-style: italic;
+      font-size: 1.1rem;
+      color: #3f4f56;
       line-height: 1.6;
-    }
-    .intro-note {
-      margin-top: 10px;
-      color: #5d6b72;
-      font-size: 0.98rem;
+      font-style: italic;
     }
 
     .report-grid {
       display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-      gap: 20px;
+      grid-template-columns: minmax(0, 2.15fr) minmax(290px, 1fr);
+      gap: 18px;
       align-items: start;
     }
 
     .main-stack,
     .side-stack {
       display: grid;
-      gap: 16px;
+      gap: 14px;
     }
 
-    .section-card {
-      border: 1px solid #d5dee3;
+    .accordion-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .accordion-item {
+      border: 1px solid #d5dee4;
       border-radius: 12px;
       background: #ffffff;
       overflow: hidden;
     }
-    .section-head {
-      padding: 14px 18px;
-      border-left: 6px solid #1787a8;
-      background: #f9fcfd;
+
+    .accordion-item summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 16px;
+      font-weight: 700;
+      font-size: 1.2rem;
+      border-left: 6px solid #1689aa;
+      background: #f8fbfd;
+      color: #1d2e39;
     }
-    .section-head h3 {
-      margin: 0;
-      font-size: 1.35rem;
+    .accordion-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .acc-chevron {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 14px solid #197ca0;
+      transition: transform 0.2s ease;
+      flex: 0 0 auto;
+    }
+    .accordion-item[open] .acc-chevron {
+      transform: rotate(180deg);
+    }
+
+    .tone-1 summary { border-left-color: #1e84a7; }
+    .tone-2 summary { border-left-color: #2c8f9e; }
+    .tone-3 summary { border-left-color: #4f79a8; }
+    .tone-4 summary { border-left-color: #796fb5; }
+    .tone-5 summary { border-left-color: #c76a80; }
+
+    .accordion-body {
+      padding: 14px 16px 14px;
+      border-top: 1px solid #e6edf2;
+      background: #ffffff;
     }
     .section-body {
-      padding: 16px 18px 10px;
-      color: #2f3c42;
-      line-height: 1.75;
-      white-space: normal;
+      color: #2f3d43;
+      line-height: 1.72;
+      white-space: pre-line;
+      margin-bottom: 10px;
     }
     .section-body p {
       margin: 0;
-      white-space: pre-line;
     }
 
     .section-foot {
-      border-top: 1px solid #e5ecef;
+      border: 1px solid #e2e9ee;
+      border-radius: 10px;
       background: #f5f8fb;
-      padding: 12px 18px 14px;
+      padding: 10px 12px;
     }
     .section-foot h4 {
-      margin: 0 0 6px 0;
-      color: #4c5f66;
+      margin: 0 0 6px;
       font-size: 1rem;
+      color: #4b5f67;
     }
     .tight-list {
       margin: 0;
       padding-left: 18px;
-      color: #39474d;
+      color: #3a474e;
       line-height: 1.55;
       font-size: 0.95rem;
     }
 
-    .tone-1 .section-head { border-left-color: #1f7aa0; }
-    .tone-2 .section-head { border-left-color: #2e8c9f; }
-    .tone-3 .section-head { border-left-color: #4c7ea8; }
-    .tone-4 .section-head { border-left-color: #7b72b7; }
-    .tone-5 .section-head { border-left-color: #c86a7f; }
-
-    .closing-card {
+    .closing-card,
+    .hwc-card,
+    .side-card {
       border: 1px solid #d5dee3;
       border-radius: 12px;
+      background: #ffffff;
+      padding: 14px;
+    }
+
+    .closing-card {
       background: #f2f7fb;
-      padding: 16px 18px;
     }
     .closing-card h3 {
       margin-bottom: 8px;
     }
 
     .hwc-card {
-      border: 1px solid #f0d3b5;
       border-left: 6px solid #f48f3a;
-      border-radius: 12px;
       background: #fff8f1;
-      padding: 16px 18px;
     }
     .hwc-card h3 {
       margin-bottom: 8px;
     }
     .hwc-muted {
-      color: #6c7278;
+      color: #6f757b;
       font-size: 0.92rem;
     }
 
@@ -131,48 +163,55 @@
       gap: 10px;
       flex-wrap: wrap;
       align-items: center;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
-    .side-card {
-      border: 1px solid #d5dee3;
-      border-radius: 12px;
-      background: #ffffff;
-      padding: 14px;
-    }
     .side-card h3 {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .side-card > p {
-      color: #54656d;
+      color: #53636b;
       margin-bottom: 10px;
     }
 
-    .signal-card {
-      border: 1px solid #e0e7ec;
+    .chart-wrap {
+      height: 190px;
+      margin-bottom: 8px;
+      border: 1px solid #e3ebf0;
+      background: #fafcfd;
       border-radius: 10px;
-      background: #f9fbfd;
+      padding: 8px;
+    }
+    .chart-wrap.small {
+      height: 170px;
+    }
+
+    .signal-card {
+      border: 1px solid #e2e9ee;
+      border-radius: 10px;
+      background: #fafcfd;
       padding: 10px;
       margin-bottom: 10px;
     }
     .signal-title {
       display: flex;
       justify-content: space-between;
-      gap: 8px;
       align-items: baseline;
+      gap: 8px;
       font-weight: 700;
-      color: #1f3340;
+      color: #1e3240;
       margin-bottom: 4px;
     }
     .signal-desc {
-      color: #54656d;
+      color: #52646d;
       font-size: 0.92rem;
       margin-bottom: 6px;
     }
+
     .quote-list {
       margin: 0;
       padding-left: 18px;
-      color: #3b4a50;
+      color: #3d4b51;
       font-size: 0.88rem;
       line-height: 1.45;
       font-style: italic;
@@ -183,8 +222,8 @@
       padding: 2px 8px;
       border-radius: 999px;
       font-size: 0.78rem;
-      background: #e2edf4;
-      color: #2e4f63;
+      background: #e4eef5;
+      color: #2d5065;
     }
 
     @media (max-width: 980px) {
@@ -222,42 +261,44 @@
         <h2>Level B Results</h2>
         <p class="intro-lead">
           What follows is a reflective interpretation of your communication patterns in this group.
-        </p>
-        <p class="intro-note">
-          This is not a diagnosis or judgment. It is a narrative lens on how you show up, connect,
-          and influence group dynamics.
+          It is not a diagnosis or judgment, but a narrative lens on how you show up.
         </p>
       </section>
 
       <div class="report-grid">
         <div class="main-stack">
-          {% for section in levelB_report.sections %}
-          {% set section_title = section.title | lower %}
-          <article class="section-card tone-{{ loop.index if loop.index <= 5 else 5 }}">
-            <div class="section-head">
-              <h3>{{ section.title }}</h3>
-            </div>
-            <div class="section-body">
-              <p>{{ section.body }}</p>
-            </div>
-            {% if section.highlights %}
-            <div class="section-foot">
-              <h4>
-                {% if 'practical upgrades' in section_title %}
-                  What could be better (small, doable)
-                {% else %}
-                  Quick takeaways
+          <section class="accordion-list">
+            {% for section in levelB_report.sections %}
+            {% set section_title = section.title | lower %}
+            <details class="accordion-item tone-{{ loop.index if loop.index <= 5 else 5 }}" {% if loop.first %}open{% endif %}>
+              <summary>
+                <span>{{ section.title }}</span>
+                <span class="acc-chevron" aria-hidden="true"></span>
+              </summary>
+              <div class="accordion-body">
+                <div class="section-body">
+                  <p>{{ section.body }}</p>
+                </div>
+                {% if section.highlights %}
+                <div class="section-foot">
+                  <h4>
+                    {% if 'practical upgrades' in section_title %}
+                      What could be better (small, doable)
+                    {% else %}
+                      Quick takeaways
+                    {% endif %}
+                  </h4>
+                  <ul class="tight-list">
+                    {% for h in section.highlights %}
+                    <li>{{ h }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
                 {% endif %}
-              </h4>
-              <ul class="tight-list">
-                {% for h in section.highlights %}
-                <li>{{ h }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-            {% endif %}
-          </article>
-          {% endfor %}
+              </div>
+            </details>
+            {% endfor %}
+          </section>
 
           {% if levelB_report.closing_note %}
           <section class="closing-card">
@@ -269,12 +310,12 @@
           <section class="hwc-card">
             <h3>Looking Ahead - HWC</h3>
             <p>
-              Patterns do not stand still. HWC extends this analysis across time,
-              showing how participation, tone, and relational role evolve over multiple windows.
+              HWC extends this analysis across time, tracking how participation,
+              emotional tone, and relational role evolve as group context changes.
             </p>
             <ul class="tight-list">
-              <li>Participation shifts over phases.</li>
-              <li>Moments where tone stabilizes or destabilizes group climate.</li>
+              <li>How participation rises or fades across phases.</li>
+              <li>Where tone stabilizes or destabilizes group climate.</li>
               <li>Early signals of role transitions.</li>
             </ul>
             <p class="hwc-muted">HWC is a longitudinal extension and is currently in progress.</p>
@@ -291,7 +332,10 @@
         <aside class="side-stack">
           <section class="side-card">
             <h3>Emotions</h3>
-            <p>Emotion indicators derived from Level A, with short excerpts for context.</p>
+            <p>From your Level A analysis: top emotional signals in this run.</p>
+            <div class="chart-wrap">
+              <canvas id="emotionMiniChart" aria-label="Top 3 emotion chart"></canvas>
+            </div>
             {% if sidebar.emotions %}
               {% for item in sidebar.emotions %}
               <article class="signal-card">
@@ -316,7 +360,10 @@
 
           <section class="side-card">
             <h3>Morals</h3>
-            <p>Moral framing detected from Level A value-loading signals.</p>
+            <p>From your Level A analysis: positive vs negative value framing.</p>
+            <div class="chart-wrap small">
+              <canvas id="moralMiniPie" aria-label="Moral framing pie chart"></canvas>
+            </div>
             {% if sidebar.morals %}
               {% for item in sidebar.morals %}
               <article class="signal-card">
@@ -341,7 +388,7 @@
 
           <section class="side-card">
             <h3>Group dynamics</h3>
-            <p>Interaction-level indicators comparing your style to broader group patterns.</p>
+            <p>High-level style cues from Level A interaction patterns.</p>
             <ul class="tight-list">
               {% if sidebar.group_points %}
                 {% for gp in sidebar.group_points %}
@@ -358,6 +405,64 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function () {
+    const emotionData = {{ sidebar.chart_emotions | tojson }} || [];
+    const moralData = {{ sidebar.chart_morals | tojson }} || {};
+
+    const emotionCtx = document.getElementById('emotionMiniChart');
+    if (emotionCtx && emotionData.length > 0) {
+      const labels = emotionData.map(x => x.label);
+      const values = emotionData.map(x => x.value_pct);
+      new Chart(emotionCtx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Signal %',
+            data: values,
+            backgroundColor: ['#2f95bf', '#5ea7d2', '#89b9e5'],
+            borderColor: '#1f6e8f',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: (v) => v + '%' } },
+            x: { ticks: { autoSkip: false, maxRotation: 22, minRotation: 0 } }
+          }
+        }
+      });
+    }
+
+    const moralCtx = document.getElementById('moralMiniPie');
+    const pos = Number(moralData.positive_pct || 0);
+    const neg = Number(moralData.negative_pct || 0);
+    if (moralCtx && (pos > 0 || neg > 0)) {
+      new Chart(moralCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Positive', 'Negative'],
+          datasets: [{
+            data: [pos, neg],
+            backgroundColor: ['#1e8f95', '#c56f5f'],
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+  })();
+</script>
 
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/browser.min.js"></script>

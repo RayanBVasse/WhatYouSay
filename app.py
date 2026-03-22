@@ -247,7 +247,7 @@ def _clip_text(text: str, max_len: int = 180) -> str:
     t = _normalize_space(text)
     if len(t) <= max_len:
         return t
-    return t[: max_len - 1].rstrip() + "…"
+    return t[: max_len - 3].rstrip() + "..."
 
 
 def _extract_self_lines(run_id: str, safe_user: str, limit: int = 1200):
@@ -357,17 +357,55 @@ def build_level_b_sidebar(metrics: dict, self_lines):
     role = metrics.get("role") or {}
     top_mode = _top_items(mode, limit=2)
     top_role = _top_items(role, limit=2)
+
+    mode_copy = {
+        "affiliative": "You often keep the social tone warm and connective.",
+        "corrective": "You step in to clarify, refine, or correct details when needed.",
+        "challenge": "You raise pressure when standards or accuracy feel at stake.",
+        "question": "You use questions to open discussion and probe uncertainty.",
+        "hedge": "You soften assertions when precision or social balance matters.",
+    }
+    role_copy = {
+        "stabilizer": "You contribute steady structure that helps anchor group flow.",
+        "initiator": "You often initiate new threads and move the conversation forward.",
+        "critic": "You pressure-test ideas and expose weak spots in arguments.",
+        "connector": "You bridge people and topics to keep conversation integrated.",
+    }
+
     group_points = []
-    for k, v in top_mode:
-        group_points.append(f"Mode signal: {k.replace('_', ' ')} ({round(v * 100, 1)}%).")
-    for k, v in top_role:
-        group_points.append(f"Role signal: {k.replace('_', ' ')} ({round(v * 100, 1)}%).")
+    for k, _v in top_mode:
+        group_points.append(mode_copy.get(k, f"Mode pattern: {k.replace('_', ' ')}."))
+    for k, _v in top_role:
+        group_points.append(role_copy.get(k, f"Role pattern: {k.replace('_', ' ')}."))
+
+    chart_emotions = []
+    for key, value in emotion_items[:3]:
+        chart_emotions.append(
+            {
+                "label": key.replace("_", " ").title(),
+                "value_pct": round(value * 100, 1),
+            }
+        )
+
+    moral_pos = float((morals_src or {}).get("moral_positive", 0.0) or 0.0)
+    moral_neg = float((morals_src or {}).get("moral_negative", 0.0) or 0.0)
+    if moral_pos == 0 and moral_neg == 0 and moral_items:
+        for k, v in moral_items:
+            if "positive" in k.lower():
+                moral_pos = float(v)
+            elif "negative" in k.lower():
+                moral_neg = float(v)
 
     return {
         "emotions": emotions,
         "morals": morals,
         "group_points": group_points,
         "confidence": metrics.get("confidence", "unknown"),
+        "chart_emotions": chart_emotions,
+        "chart_morals": {
+            "positive_pct": round(moral_pos * 100, 1),
+            "negative_pct": round(moral_neg * 100, 1),
+        },
     }
 
 
