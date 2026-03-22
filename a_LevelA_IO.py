@@ -9,7 +9,7 @@ import emoji
 from b_lexicon_loader import (load_nrc_emotion_lexicon,load_categorical_moral_lexicon_tsv,load_weighted_moral_lexicon_tsv)
 from c_feature_extractor import (tokenize,lexicon_hits,message_heuristics,extract_emoji_valence)
 from d_scoring import (normalize_counter,tone_from_nrc,mode_scores,role_scores,confidence_band)
-from e_visuals import (save_bar,save_line)
+from e_visuals import (save_bar, save_line, save_pie)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
@@ -352,14 +352,29 @@ def run_level_a_pipeline(chat_path, user_handle, safe_user, out_dir):
 
     # --- Visuals
     emotion_plot = os.path.join(out_dir, "emotion_distribution.png")
-    save_bar(emotion_norm, "Emotion distribution (NRC)", emotion_plot)
+    save_bar(
+        emotion_norm,
+        "Emotion distribution (NRC)",
+        emotion_plot,
+        palette=["#2e8fb8", "#4ba6c9", "#73bbd9", "#8fcae2", "#688dc1", "#8a9fd0", "#5e7fb0"],
+    )
 
     moral_plot = os.path.join(out_dir, "moral_loading.png")
     if moral_norm:
-        save_bar(moral_norm, "Moral / value framing", moral_plot)
+        save_pie(
+            moral_norm,
+            "Moral / value framing",
+            moral_plot,
+            colors=["#2a9db1", "#d07666"],
+        )
 
     valence_plot = os.path.join(out_dir, "valence_timeline.png")
-    save_line(valence_timeline, "Emoji valence timeline (proxy)", valence_plot, ylabel="Valence")
+    save_line(
+        valence_timeline,
+        "Emoji valence timeline (proxy)",
+        valence_plot,
+        ylabel="Valence",
+    )
     
     for m in anon_msgs:
         if "timestamp" in m and m["timestamp"] is not None:

@@ -153,11 +153,6 @@
     .methodology-card h3 {
       margin-bottom: 8px;
     }
-    .method-grid {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: 1fr;
-    }
     .method-block {
       border: 1px solid #dfe7ed;
       border-radius: 10px;
@@ -173,6 +168,21 @@
       margin: 0;
       color: #40525a;
       line-height: 1.55;
+      font-size: 0.95rem;
+    }
+    .method-single h4 {
+      margin-top: 10px;
+      margin-bottom: 5px;
+      color: #23414f;
+      font-size: 1rem;
+    }
+    .method-single h4:first-child {
+      margin-top: 0;
+    }
+    .method-single p {
+      margin: 0 0 6px;
+      color: #40525a;
+      line-height: 1.5;
       font-size: 0.95rem;
     }
     .refs-list {
@@ -350,70 +360,50 @@
 
           <section class="methodology-card">
             <h3>How labels are produced</h3>
-            <div class="method-grid">
-              <article class="method-block">
-                <h4>1) Deterministic lexical signals (Level A)</h4>
-                <p>
-                  Emotion and moral indicators are first computed with transparent lexicon-based scoring
-                  on your uploaded text. Emotion signals use the NRC framework (for example joy, trust,
-                  anticipation, fear), then normalize frequencies across your messages. Moral framing is
-                  estimated with weighted value-loading signals.
-                </p>
-              </article>
+            <article class="method-block method-single">
+              <h4>Deterministic lexical signals (Level A)</h4>
+              <p>
+                Emotion and moral indicators are first computed with transparent lexicon-based scoring on your uploaded text.
+                Emotion signals use the NRC framework, then normalize frequencies across your messages. Moral framing is estimated
+                with weighted value-loading signals.
+              </p>
 
-              <article class="method-block">
-                <h4>2) Context-aware narrative synthesis (Level B)</h4>
-                <p>
-                  The model does not label one sentence in isolation. It uses broader conversational context
-                  plus Level A metrics to generate an interpretive summary of patterns across the exchange.
-                </p>
-              </article>
+              <h4>Context-aware narrative synthesis (Level B)</h4>
+              <p>
+                The model does not label one sentence in isolation. It uses broader conversational context plus Level A metrics
+                to generate an interpretive summary of patterns across the exchange.
+              </p>
 
-              <article class="method-block">
-                <h4>Interpretation limits</h4>
-                <p>
-                  Short excerpts shown here are illustrative examples, not full evidence. A line may appear
-                  positive or negative out of context; interpretation depends on surrounding messages and flow.
-                </p>
-              </article>
+              <h4>Interpretation limits and privacy</h4>
+              <p>
+                Short excerpts shown here are illustrative examples, not full evidence. A line may appear positive or negative out
+                of context; interpretation depends on surrounding messages and flow. For privacy, only short excerpts are displayed.
+                Because this is your uploaded text, you may review your local source export for full context.
+              </p>
 
-              <article class="method-block">
-                <h4>Privacy and access note</h4>
-                <p>
-                  For privacy, only short excerpts are displayed. Because this is your uploaded text, you may
-                  review your local source export for full context.
-                </p>
-              </article>
+              <h4>What this is not</h4>
+              <p>This system reports communication patterns. It is not a clinical, psychiatric, or diagnostic tool.</p>
 
-              <article class="method-block">
-                <h4>What this is not</h4>
-                <p>
-                  This system reports communication patterns. It is not a clinical, psychiatric, or diagnostic tool.
-                </p>
-              </article>
-
-              <article class="method-block">
-                <h4>References</h4>
-                <ul class="refs-list">
-                  <li>
-                    Mohammad, S. M., &amp; Turney, P. D. (2013). Crowdsourcing a Word-Emotion Association Lexicon.
-                    <a href="https://www.saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm" target="_blank" rel="noopener noreferrer">NRC Emotion Lexicon resource</a>.
-                  </li>
-                  <li>
-                    Mohammad, S. M., &amp; Turney, P. D. (2010). Emotions Evoked by Common Words and Phrases.
-                    <a href="https://www.saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm" target="_blank" rel="noopener noreferrer">Resource page and references</a>.
-                  </li>
-                  <li>
-                    Araque, O., Gatti, L., &amp; Kalimeri, K. (2022). LibertyMFD: A Lexicon to Assess the Moral Foundation of Liberty.
-                    <a href="https://doi.org/10.1145/3524458.3547264" target="_blank" rel="noopener noreferrer">DOI: 10.1145/3524458.3547264</a>.
-                  </li>
-                  <li>
-                    Araque, O., Gatti, L., &amp; Kalimeri, K. (2019). MoralStrength.
-                    <a href="https://arxiv.org/abs/1904.08314" target="_blank" rel="noopener noreferrer">arXiv:1904.08314</a>.
-                  </li>
-                </ul>
-              </article>
-            </div>
+              <h4>References</h4>
+              <ul class="refs-list">
+                <li>
+                  Mohammad, S. M., &amp; Turney, P. D. (2013). Crowdsourcing a Word-Emotion Association Lexicon.
+                  <a href="https://www.saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm" target="_blank" rel="noopener noreferrer">NRC Emotion Lexicon resource</a>.
+                </li>
+                <li>
+                  Mohammad, S. M., &amp; Turney, P. D. (2010). Emotions Evoked by Common Words and Phrases.
+                  <a href="https://www.saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm" target="_blank" rel="noopener noreferrer">Resource page and references</a>.
+                </li>
+                <li>
+                  Araque, O., Gatti, L., &amp; Kalimeri, K. (2022). LibertyMFD: A Lexicon to Assess the Moral Foundation of Liberty.
+                  <a href="https://doi.org/10.1145/3524458.3547264" target="_blank" rel="noopener noreferrer">DOI: 10.1145/3524458.3547264</a>.
+                </li>
+                <li>
+                  Araque, O., Gatti, L., &amp; Kalimeri, K. (2019). MoralStrength.
+                  <a href="https://arxiv.org/abs/1904.08314" target="_blank" rel="noopener noreferrer">arXiv:1904.08314</a>.
+                </li>
+              </ul>
+            </article>
           </section>
 
           <section class="hwc-card">

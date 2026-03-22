@@ -57,44 +57,43 @@
 		</div>
 		<div class="col-12">
 
-			<section>
-				<h2>What this means (plain language)</h2>
-				<ul class="metrics-list">
-				<li>
-					<h3>Average message length:</h3> <b>Words&nbsp;&nbsp;:</b>  {{ metrics.avg_len_words }}
-					<span class="hint">&nbsp;&nbsp;(How much you tend to say per message)</span>
-				</li>
-				<li>
-					<b>Questions&nbsp;&nbsp;:</b> {{ metrics.question_pct }}%  
-					<span class="hint">&nbsp;&nbsp;(Signals curiosity and engagement)</span>
-				</li>
-				<li>
-					<b>Emoji use&nbsp;&nbsp;:</b> {{ metrics.emoji_pct }}%  
-					<span class="hint">&nbsp;&nbsp;(Light emotional or tone signalling)</span>
-				</li>
-				<li>
-					<b>Overall tone balance&nbsp;&nbsp;:</b> {{ metrics.tone_valence }}  
-					<span class="hint">&nbsp;&nbsp;(A neutral-to-positive balance is common)</span>
-				</li>
-				</ul>
+			<section class="levela-intro-grid">
+				<article class="intro-panel">
+					<h2>What this means (plain language)</h2>
+					<ul class="metrics-list">
+					<li>
+						<h3>Average message length:</h3> <b>Words&nbsp;&nbsp;:</b>  {{ metrics.avg_len_words }}
+						<span class="hint">&nbsp;&nbsp;(How much you tend to say per message)</span>
+					</li>
+					<li>
+						<b>Questions&nbsp;&nbsp;:</b> {{ metrics.question_pct }}%
+						<span class="hint">&nbsp;&nbsp;(Signals curiosity and engagement)</span>
+					</li>
+					<li>
+						<b>Emoji use&nbsp;&nbsp;:</b> {{ metrics.emoji_pct }}%
+						<span class="hint">&nbsp;&nbsp;(Light emotional or tone signalling)</span>
+					</li>
+					<li>
+						<b>Overall tone balance&nbsp;&nbsp;:</b> {{ metrics.tone_valence }}
+						<span class="hint">&nbsp;&nbsp;(A neutral-to-positive balance is common)</span>
+					</li>
+					</ul>
+				</article>
+
+				<article class="intro-panel">
+					<h2>Visual summaries</h2>
+					<p class="caption">
+						The charts below offer a visual snapshot of how your communication unfolds over time.
+						They are not meant to diagnose or judge. Think of this as a compact observation layer:
+						the same words you already wrote, viewed from a different angle. You do not need to
+						interpret every value. What matters most is the overall shape, balance, and rhythm.
+					</p>
+				</article>
 			</section>
 		</div>
 			
-<hr class="section-divider">
-			
-<section class="charts">
-	<h2>Visual summaries</h2>
-	<p class="caption">The charts below offer a visual snapshot of how your communication unfolds over time.
-	They aren’t meant to diagnose or judge - they’re simply another way of seeing patterns that 
-	are usually invisible in day-to-day conversation. Think of this as a small observational 
-	experiment: the same words you already wrote, viewed from a different angle. You don’t need to 
-	interpret every number or bar. What matters is the overall shape, balance, 
-	and rhythm. Most people find that.....</p>
-<hr>
-</section>
-			
 		{% if metrics["files"] is defined %}
-
+    <div class="col-12">
 <section class="visual-section">
 
   {# ---------- ROW 1: Emotion + Moral ---------- #}
@@ -151,7 +150,7 @@
 		  {% endif %}
 
 </section>
-
+    </div>
 {% endif %}
 
 
