@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>WhatYouSay - Privacy</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="stylesheet" href="/static/css/forms.css" />
+    <style>
+      .policy-wrap {
+        max-width: 980px;
+        margin: 0 auto;
+      }
+      .policy-card {
+        background: #f6fafc;
+        border: 1px solid #d8e6ef;
+        border-radius: 12px;
+        padding: 1rem 1.15rem;
+      }
+      .policy-card h2 {
+        margin-bottom: 0.35rem;
+      }
+      .policy-section {
+        background: #ffffff;
+        border: 1px solid #dce7ee;
+        border-radius: 10px;
+        padding: 0.8rem 0.95rem;
+        margin: 0 0 0.8rem 0;
+      }
+      .policy-section h3 {
+        margin-bottom: 0.35rem;
+      }
+      .policy-alert {
+        border-left: 6px solid #c56f5f;
+        background: #fff5f2;
+      }
+      .policy-section ul {
+        margin: 0.3rem 0 0 1.2rem;
+        list-style: disc;
+      }
+      .policy-section li {
+        margin: 0.15rem 0;
+      }
+      .meta-line {
+        color: #4f6168;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="page-wrapper">
+      <div id="header-wrapper">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <header id="header">
+                <h1><a href="{{ url_for('index') }}" id="logo">WhatYouSay</a></h1>
+                <nav id="nav">
+                  <a href="{{ url_for('index') }}">Homepage</a>
+                  <a href="{{ url_for('method_page') }}">Method</a>
+                  <a href="{{ url_for('publication_page') }}">Publication</a>
+                  <a href="{{ url_for('privacy_page') }}" class="current-page-item">Privacy</a>
+                  <a href="#">HowWeConnect</a>
+                </nav>
+              </header>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="main">
+        <div class="container policy-wrap">
+          <div class="row main-row">
+            <div class="col-12">
+              <section class="policy-card compact-text">
+                <h2>Privacy Policy</h2>
+                <p>
+                  This policy explains how WhatYouSay processes uploaded conversation text.
+                  This page is written for UK GDPR transparency and user trust.
+                </p>
+
+                <article class="policy-section">
+                  <h3>1) What data is collected</h3>
+                  <ul>
+                    <li>The text file (.txt) uploaded by the user.</li>
+                    <li>The user handle entered at upload (used only for labeling in output).</li>
+                    <li>No account creation, no email capture, no cookies, and no tracking analytics in this app flow.</li>
+                    <li>No personally identifiable information is collected beyond what appears in the uploaded text itself.</li>
+                  </ul>
+                </article>
+
+                <article class="policy-section">
+                  <h3>2) How data is processed</h3>
+                  <p>Uploaded text is processed in two stages:</p>
+                  <ul>
+                    <li>
+                      <strong>Level A:</strong> Deterministic lexicon-based analysis (NRC Emotion Lexicon,
+                      MoralStrength/LibertyMFD). This runs on server infrastructure (Supabase/Vercel) and
+                      does not require external LLM API calls.
+                    </li>
+                    <li>
+                      <strong>Level B:</strong> Narrative synthesis generated via a large language model API.
+                      Uploaded text and/or processed summary features are sent to a third-party provider for inference.
+                    </li>
+                  </ul>
+                  <p>
+                    API inference data is processed for response generation and is not used by default for model training.
+                    Temporary retention may apply under the provider's standard processing terms.
+                    Current provider for this deployment: <strong>[confirm provider: OpenAI API / Anthropic API]</strong>.
+                    Provider policy link: <strong>[insert provider policy URL]</strong>.
+                  </p>
+                </article>
+
+                <article class="policy-section">
+                  <h3>3) Data retention and deletion</h3>
+                  <ul>
+                    <li>Uploaded content, generated outputs, and run records are stored temporarily in private cloud storage (Supabase) for processing only.</li>
+                    <li>Automatic deletion runs within 24 hours.</li>
+                    <li>Users can trigger immediate deletion at any time using <strong>Delete and Exit</strong>.</li>
+                    <li>No data is retained after deletion and no backups are kept for restored access.</li>
+                  </ul>
+                </article>
+
+                <article class="policy-section policy-alert">
+                  <h3>4) Third-party consent and group chats</h3>
+                  <p><strong>WhatYouSay analyses ALL messages in an uploaded conversation file, including messages from other participants.</strong></p>
+                  <ul>
+                    <li>By uploading a group conversation, you confirm that all identifiable participants have been informed of and consent to this analysis.</li>
+                    <li>The platform operator does not verify consent and accepts no liability for unauthorized uploads.</li>
+                    <li>If you are a participant in a conversation uploaded without your consent, contact <strong>[insert contact email]</strong> to request information or deletion.</li>
+                  </ul>
+                </article>
+
+                <article class="policy-section">
+                  <h3>5) Anonymisation</h3>
+                  <ul>
+                    <li>Speaker names in output are replaced with anonymised labels (Usr 1, Usr 2, etc.), except for the user handle entered at upload.</li>
+                    <li>Short text excerpts may appear in Level B as illustrative evidence and may still be recognisable to participants in the original chat.</li>
+                    <li>No names, phone numbers, or contact details are intentionally displayed as explicit fields in output views.</li>
+                  </ul>
+                </article>
+
+                <article class="policy-section">
+                  <h3>6) Children's data</h3>
+                  <ul>
+                    <li>WhatYouSay is not intended for use by individuals under 18.</li>
+                    <li>By uploading, you confirm that the conversation does not contain messages from individuals under 18, or that appropriate parental/guardian consent has been obtained.</li>
+                  </ul>
+                </article>
+
+                <article class="policy-section">
+                  <h3>7) Data location and cross-border transfer</h3>
+                  <ul>
+                    <li>Hosting and storage: Supabase cloud infrastructure (<strong>[confirm region]</strong>).</li>
+                    <li>LLM API processing: <strong>[confirm provider and region]</strong>.</li>
+                    <li>Data may be processed outside the United Kingdom during LLM inference. Standard contractual clauses and/or data processing agreements apply where required.</li>
+                  </ul>
+                </article>
+
+                <article class="policy-section">
+                  <h3>8) Your rights (UK GDPR)</h3>
+                  <ul>
+                    <li><strong>Right to erasure:</strong> use Delete and Exit or contact <strong>[insert contact email]</strong>.</li>
+                    <li><strong>Right to access:</strong> outputs are delivered directly in-session to the uploader.</li>
+                    <li><strong>Right to object:</strong> do not upload data and/or delete existing session data via Delete and Exit.</li>
+                    <li><strong>Data queries:</strong> contact <strong>[insert contact email]</strong>.</li>
+                  </ul>
+                </article>
+
+                <article class="policy-section">
+                  <h3>9) Disclaimer</h3>
+                  <ul>
+                    <li>WhatYouSay is a research tool. Outputs are descriptive summaries based on statistical patterning and language model inference.</li>
+                    <li>Outputs are not evidence, assessments, or evaluations of individuals.</li>
+                    <li>Outputs should not be used in legal, clinical, employment, educational, or interpersonal dispute contexts.</li>
+                    <li>The platform operator accepts no liability for decisions made based on WhatYouSay outputs.</li>
+                  </ul>
+                </article>
+
+                <article class="policy-section">
+                  <h3>10) Changes to this policy</h3>
+                  <p>
+                    This policy may be updated. The current version is always available at this URL.
+                  </p>
+                  <p class="meta-line"><strong>Last updated:</strong> 22 March 2026</p>
+                </article>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer-wrapper">
+        <div class="container">
+          <div class="row">
+            <div class="col-8 col-12-medium"></div>
+            <div class="col-4 col-12-medium"></div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div id="copyright">
+                &copy; WhatYouSay. All rights reserved. | Source: <a href="http://living-literature.org">Living Literature</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/browser.min.js"></script>
+    <script src="/static/js/breakpoints.min.js"></script>
+    <script src="/static/js/util.js"></script>
+    <script src="/static/js/main.js"></script>
+  </body>
+</html>

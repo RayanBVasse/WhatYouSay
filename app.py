@@ -456,6 +456,24 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/WhatYouSay/method.html", methods=["GET"])
+@app.route("/WhatYouSay/method", methods=["GET"])
+def method_page():
+    return render_template("method.html")
+
+
+@app.route("/WhatYouSay/privacy.html", methods=["GET"])
+@app.route("/WhatYouSay/privacy", methods=["GET"])
+def privacy_page():
+    return render_template("privacy.html")
+
+
+@app.route("/WhatYouSay/publication.html", methods=["GET"])
+@app.route("/WhatYouSay/publication", methods=["GET"])
+def publication_page():
+    return render_template("publication.html")
+
+
 @app.route("/", methods=["GET"])
 def root():
     return redirect(url_for("index"))

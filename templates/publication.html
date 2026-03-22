@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>WhatYouSay - Publication</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="stylesheet" href="/static/css/forms.css" />
+    <style>
+      .pub-wrap {
+        max-width: 980px;
+        margin: 0 auto;
+      }
+      .pub-card {
+        background: #f6fafc;
+        border: 1px solid #d8e6ef;
+        border-radius: 12px;
+        padding: 1rem 1.15rem;
+      }
+      .pub-block {
+        background: #ffffff;
+        border: 1px solid #dce7ee;
+        border-radius: 10px;
+        padding: 0.8rem 0.95rem;
+        margin: 0 0 0.8rem 0;
+      }
+      .pub-block h3 {
+        margin-bottom: 0.35rem;
+      }
+      .pub-block ul {
+        margin: 0.3rem 0 0 1.2rem;
+        list-style: disc;
+      }
+      .pub-block li {
+        margin: 0.15rem 0;
+      }
+      .cite-box {
+        border: 1px solid #d9e6ef;
+        background: #f8fcff;
+        border-radius: 8px;
+        padding: 0.7rem 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="page-wrapper">
+      <div id="header-wrapper">
+        <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <header id="header">
+                <h1><a href="{{ url_for('index') }}" id="logo">WhatYouSay</a></h1>
+                <nav id="nav">
+                  <a href="{{ url_for('index') }}">Homepage</a>
+                  <a href="{{ url_for('method_page') }}">Method</a>
+                  <a href="{{ url_for('publication_page') }}" class="current-page-item">Publication</a>
+                  <a href="{{ url_for('privacy_page') }}">Privacy</a>
+                  <a href="#">HowWeConnect</a>
+                </nav>
+              </header>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="main">
+        <div class="container pub-wrap">
+          <div class="row main-row">
+            <div class="col-12">
+              <section class="pub-card compact-text">
+                <h2>Publication</h2>
+                <p>
+                  WhatYouSay is part of the Living Literature research programme and is positioned as a research-backed tool.
+                </p>
+
+                <article class="pub-block">
+                  <h3>1) Research context</h3>
+                  <p>
+                    WhatYouSay is part of the Living Literature research programme by Rayan B. Vasse (PhD).
+                    It applies methods from computational sociolinguistics, sentiment analysis, and moral foundations
+                    theory to informal digital communication.
+                  </p>
+                  <p>
+                    The tool operationalises methods aligned with submitted/preprint work in this wider programme.
+                  </p>
+                </article>
+
+                <article class="pub-block">
+                  <h3>2) WYS-specific publication</h3>
+                  <p>
+                    DOI: <a href="https://doi.org/10.5281/zenodo.18890804" target="_blank" rel="noopener noreferrer">10.5281/zenodo.18890804</a>
+                  </p>
+                  <p>
+                    Measuring Within-Person Variation in Written Communication Patterns Across Social Contexts.
+                  </p>
+                </article>
+
+                <article class="pub-block">
+                  <h3>3) Open source</h3>
+                  <p>
+                    The WYS analysis pipeline is implemented in open-source scripts.
+                    Repository: <a href="https://github.com/RayanBVasse/WhatYouSay" target="_blank" rel="noopener noreferrer">github.com/RayanBVasse/WhatYouSay</a>
+                  </p>
+                  <p>
+                    The codebase is available for inspection by technically trained users.
+                    Contributions and issues are welcome.
+                  </p>
+                </article>
+
+                <article class="pub-block">
+                  <h3>4) How to cite</h3>
+                  <div class="cite-box">
+                    Vasse, R. B. (2026). WhatYouSay: Automated Two-Level Analysis of Digital Conversation Exports.
+                    Living Literature. Available at: wys.living-literature.org
+                  </div>
+                  <p>
+                    If you use WhatYouSay in academic research, please cite this tool and the relevant papers listed above.
+                  </p>
+                </article>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="footer-wrapper">
+        <div class="container">
+          <div class="row">
+            <div class="col-8 col-12-medium"></div>
+            <div class="col-4 col-12-medium"></div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div id="copyright">
+                &copy; WhatYouSay. All rights reserved. | Source: <a href="http://living-literature.org">Living Literature</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/browser.min.js"></script>
+    <script src="/static/js/breakpoints.min.js"></script>
+    <script src="/static/js/util.js"></script>
+    <script src="/static/js/main.js"></script>
+  </body>
+</html>

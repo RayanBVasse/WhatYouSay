@@ -320,9 +320,9 @@
             <h1><a href="{{ url_for('index') }}" id="logo">WhatYouSay</a></h1>
             <nav id="nav">
               <a href="{{ url_for('index') }}">Homepage</a>
-              <a href="#">Method</a>
-              <a href="#">Publication</a>
-              <a href="#">Privacy</a>
+              <a href="{{ url_for('method_page') }}">Method</a>
+              <a href="{{ url_for('publication_page') }}">Publication</a>
+              <a href="{{ url_for('privacy_page') }}">Privacy</a>
               <a href="#">HowWeConnect</a>
             </nav>
           </header>
