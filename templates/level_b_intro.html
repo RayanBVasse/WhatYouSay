@@ -206,7 +206,7 @@
   function statusForElapsed(seconds) {
     if (seconds < 5) return "Preparing request...";
     if (seconds < 15) return "Collecting Level A artifacts...";
-    if (seconds < 40) return "Calling OpenAI model...";
+    if (seconds < 40) return "Generating narrative analysis...";
     return "Still processing. Large chats can take longer.";
   }
 
@@ -227,7 +227,7 @@
       statusLine.textContent = statusForElapsed(seconds);
       if (seconds >= lastCheckpoint + 5) {
         lastCheckpoint = seconds;
-        addLog("[OpenAI] still working... (" + seconds + "s)");
+        addLog("[Model] still working... (" + seconds + "s)");
       }
     }, 500);
 
