@@ -17,8 +17,11 @@
       }
       .upload-actions {
         margin-top: 0.8rem;
+        position: relative;
+        z-index: 5;
       }
-      .button.is-disabled {
+      .button.is-disabled,
+      .button[disabled] {
         opacity: 0.5;
         pointer-events: none;
         cursor: not-allowed;
@@ -63,6 +66,8 @@
         gap: 10px;
         margin: 0;
         padding: 0;
+        position: relative;
+        z-index: 5;
       }
       .compact-footer-links a {
         text-decoration: none;
@@ -211,7 +216,7 @@
                     </div>
 
                     <div class="upload-actions">
-                      <button id="upload-submit-btn" type="submit" class="button is-disabled" aria-disabled="true">Upload &amp; Confirm</button>
+                      <button id="upload-submit-btn" type="submit" class="button is-disabled" aria-disabled="true" disabled>Upload &amp; Confirm</button>
                     </div>
                   </form>
                 </div>
@@ -264,10 +269,10 @@
           <div class="row">
             <div class="col-12">
               <div class="compact-footer-links">
-                <a href="{{ url_for('index') }}">Homepage</a>
-                <a href="{{ url_for('method_page') }}">Method</a>
-                <a href="{{ url_for('publication_page') }}">Publication</a>
-                <a href="{{ url_for('privacy_page') }}">Privacy</a>
+                <a href="/WhatYouSay/">Homepage</a>
+                <a href="/WhatYouSay/method.html">Method</a>
+                <a href="/WhatYouSay/publication.html">Publication</a>
+                <a href="/WhatYouSay/privacy.html">Privacy</a>
                 <a href="#">HowWeConnect</a>
               </div>
             </div>
@@ -285,49 +290,58 @@
     </div>
 
     <script>
-      var fileInput = document.getElementById("text-file");
-      var fileMessage = document.getElementById("file-dropzone-message");
-      var consentBox = document.getElementById("consent-box");
-      var uploadSubmitBtn = document.getElementById("upload-submit-btn");
-      var uploadForm = document.getElementById("upload-form");
+      document.addEventListener("DOMContentLoaded", function () {
+        var fileInput = document.getElementById("text-file");
+        var fileMessage = document.getElementById("file-dropzone-message");
+        var consentBox = document.getElementById("consent-box");
+        var uploadSubmitBtn = document.getElementById("upload-submit-btn");
+        var uploadForm = document.getElementById("upload-form");
 
-      function syncUploadButtonState() {
-        if (!uploadSubmitBtn || !consentBox) return;
-        var allowed = !!consentBox.checked;
-        uploadSubmitBtn.classList.toggle("is-disabled", !allowed);
-        uploadSubmitBtn.setAttribute("aria-disabled", allowed ? "false" : "true");
-      }
+        function syncUploadButtonState() {
+          if (!uploadSubmitBtn || !consentBox) return;
+          var allowed = !!consentBox.checked;
+          uploadSubmitBtn.disabled = !allowed;
+          uploadSubmitBtn.setAttribute("aria-disabled", allowed ? "false" : "true");
 
-      if (fileInput && fileMessage) {
-        fileInput.addEventListener("change", function () {
-          if (fileInput.files && fileInput.files.length > 0) {
-            fileMessage.textContent = "The file has been successfully received.";
-            fileMessage.classList.add("is-visible");
-          } else {
-            fileMessage.textContent = "";
-            fileMessage.classList.remove("is-visible");
+          if (allowed) {
+            uploadSubmitBtn.className = uploadSubmitBtn.className.replace(/\bis-disabled\b/g, "").trim();
+          } else if (uploadSubmitBtn.className.indexOf("is-disabled") === -1) {
+            uploadSubmitBtn.className += " is-disabled";
           }
-        });
-      }
+        }
 
-      if (consentBox) {
-        consentBox.addEventListener("change", syncUploadButtonState);
-      }
-
-      if (uploadForm) {
-        uploadForm.addEventListener("submit", function (event) {
-          if (consentBox && !consentBox.checked) {
-            event.preventDefault();
-            syncUploadButtonState();
-            if (fileMessage) {
-              fileMessage.textContent = "Please tick consent before uploading.";
+        if (fileInput && fileMessage) {
+          fileInput.addEventListener("change", function () {
+            if (fileInput.files && fileInput.files.length > 0) {
+              fileMessage.textContent = "The file has been successfully received.";
               fileMessage.classList.add("is-visible");
+            } else {
+              fileMessage.textContent = "";
+              fileMessage.classList.remove("is-visible");
             }
-          }
-        });
-      }
+          });
+        }
 
-      syncUploadButtonState();
+        if (consentBox) {
+          consentBox.addEventListener("change", syncUploadButtonState);
+          consentBox.addEventListener("click", syncUploadButtonState);
+        }
+
+        if (uploadForm) {
+          uploadForm.addEventListener("submit", function (event) {
+            if (consentBox && !consentBox.checked) {
+              event.preventDefault();
+              syncUploadButtonState();
+              if (fileMessage) {
+                fileMessage.textContent = "Please tick consent before uploading.";
+                fileMessage.classList.add("is-visible");
+              }
+            }
+          });
+        }
+
+        syncUploadButtonState();
+      });
     </script>
 
     <script src="/static/js/jquery.min.js"></script>
