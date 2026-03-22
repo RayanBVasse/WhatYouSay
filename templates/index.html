@@ -18,7 +18,7 @@
       .upload-actions {
         margin-top: 0.8rem;
         position: relative;
-        z-index: 5;
+        z-index: 120;
       }
       .button.is-disabled,
       .button[disabled] {
@@ -28,6 +28,19 @@
       }
       .preview-strip {
         margin-top: 1.6rem;
+      }
+      .main-row {
+        position: relative;
+        z-index: 20;
+      }
+      .preview-row {
+        position: relative;
+        z-index: 10;
+        pointer-events: none;
+      }
+      .preview-row .preview-strip,
+      .preview-row .preview-strip * {
+        pointer-events: auto;
       }
       .preview-strip h2 {
         margin-bottom: 0.4rem;
@@ -58,6 +71,8 @@
       }
       #footer-wrapper.compact-footer {
         padding: 1.2em 0 1em;
+        position: relative;
+        z-index: 150;
       }
       .compact-footer-links {
         display: flex;
@@ -67,10 +82,13 @@
         margin: 0;
         padding: 0;
         position: relative;
-        z-index: 5;
+        z-index: 160;
       }
       .compact-footer-links a {
         text-decoration: none;
+        position: relative;
+        z-index: 170;
+        pointer-events: auto;
       }
       #footer-wrapper.compact-footer #copyright {
         margin: 0.8em 0 0 0;
@@ -241,7 +259,7 @@
             </div>
           </div>
 
-          <div class="row">
+          <div class="row preview-row">
             <div class="col-12">
               <section class="preview-strip compact-text">
                 <h2>Preview the outputs before uploading</h2>
@@ -302,12 +320,7 @@
           var allowed = !!consentBox.checked;
           uploadSubmitBtn.disabled = !allowed;
           uploadSubmitBtn.setAttribute("aria-disabled", allowed ? "false" : "true");
-
-          if (allowed) {
-            uploadSubmitBtn.className = uploadSubmitBtn.className.replace(/\bis-disabled\b/g, "").trim();
-          } else if (uploadSubmitBtn.className.indexOf("is-disabled") === -1) {
-            uploadSubmitBtn.className += " is-disabled";
-          }
+          uploadSubmitBtn.classList.toggle("is-disabled", !allowed);
         }
 
         if (fileInput && fileMessage) {
