@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 
 def build_levelB_prompt(*, anon_text: str, self_text: str, metrics: dict, evidence: dict, speaker_alias: str) -> str:
@@ -7,9 +8,11 @@ def build_levelB_prompt(*, anon_text: str, self_text: str, metrics: dict, eviden
     speaker_alias = safe_user (sanitized handle) e.g. "Marius"
     """
 
-    # Keep tokens sane: cap text if needed (you can tune these)
-    anon_cap = 120_000
-    self_cap = 80_000
+    # Keep request size controlled for serverless reliability.
+    anon_cap = int(os.getenv("LEVELB_ANON_CHAR_CAP", "80000"))
+    self_cap = int(os.getenv("LEVELB_SELF_CHAR_CAP", "50000"))
+    metrics_cap = int(os.getenv("LEVELB_METRICS_CHAR_CAP", "25000"))
+    evidence_cap = int(os.getenv("LEVELB_EVIDENCE_CHAR_CAP", "12000"))
     anon_text = anon_text[-anon_cap:]
     self_text = self_text[-self_cap:]
 
@@ -73,10 +76,10 @@ INPUTS:
 SPEAKER_ALIAS: {speaker_alias}
 
 LEVEL_A_METRICS_JSON:
-{json.dumps(metrics, indent=2)[:40_000]}
+{json.dumps(metrics, indent=2)[:metrics_cap]}
 
 EVIDENCE_JSON (may be empty):
-{json.dumps(evidence, indent=2)[:20_000]}
+{json.dumps(evidence, indent=2)[:evidence_cap]}
 
 SELF_ONLY_TEXT (speaker only, may be long):
 {self_text}

@@ -552,9 +552,11 @@ def level_b():
             )
         except Exception as e:
             store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
+            err_type = type(e).__name__
             return render_template(
                 "error.html",
-                message=f"Level B generation failed. Please try again. Details: {e}",
+                title="Level B generation failed",
+                message=f"Level B generation failed ({err_type}). Details: {e}",
             )
 
     return render_template(

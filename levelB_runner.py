@@ -1,30 +1,98 @@
+﻿import json
 import os
 import sys
-import json
 import time
 from pathlib import Path
-from openai import OpenAI
+
+from openai import (
+    APIConnectionError,
+    APIStatusError,
+    APITimeoutError,
+    AuthenticationError,
+    BadRequestError,
+    OpenAI,
+    RateLimitError,
+)
 
 from levelB_prompt import build_levelB_prompt
 
 BASE_DIR = Path(__file__).resolve().parent
 RESULTS_DIR = BASE_DIR / "results"
 
-# If you insist on hard-coding, put it here (NOT recommended for deploy).
-# Better: set environment variable OPENAI_API_KEY.
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise RuntimeError("Missing OPENAI_API_KEY in environment")
-client = OpenAI(api_key=OPENAI_API_KEY)
+def _client() -> OpenAI:
+    api_key = (os.getenv("OPENAI_API_KEY") or "").strip()
+    if not api_key:
+        raise RuntimeError("Missing OPENAI_API_KEY in environment.")
 
-def generate_levelB_narrative(*,anon_text: str,self_text: str,metrics: dict,evidence: dict | None = None,speaker_alias: str,) -> dict:
+    timeout_seconds = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "90"))
+    max_retries = int(os.getenv("OPENAI_MAX_RETRIES", "2"))
+    return OpenAI(api_key=api_key, timeout=timeout_seconds, max_retries=max_retries)
+
+
+def _extract_output_text(resp) -> str:
+    # Newer SDKs provide output_text directly.
+    out_text = getattr(resp, "output_text", None)
+    if out_text:
+        return str(out_text).strip()
+
+    chunks = []
+    for item in getattr(resp, "output", []) or []:
+        if getattr(item, "type", None) != "message":
+            continue
+        for c in getattr(item, "content", []) or []:
+            ctype = getattr(c, "type", None)
+            if ctype in ("output_text", "text"):
+                text = getattr(c, "text", "")
+                if text:
+                    chunks.append(str(text))
+
+    return "\n".join(chunks).strip()
+
+
+def call_openai(prompt: str) -> str:
+    model = (os.getenv("OPENAI_MODEL") or "gpt-4.1-mini").strip()
+    attempts = max(1, int(os.getenv("OPENAI_ATTEMPTS", "3")))
+    client = _client()
+
+    for attempt in range(1, attempts + 1):
+        try:
+            resp = client.responses.create(
+                model=model,
+                input=prompt,
+                temperature=0.4,
+            )
+            out = _extract_output_text(resp)
+            if not out:
+                raise RuntimeError("OpenAI returned empty output.")
+            return out
+        except (APIConnectionError, APITimeoutError) as e:
+            if attempt >= attempts:
+                raise RuntimeError(
+                    f"OpenAI connection timed out after {attempts} attempts. "
+                    "Try again in 1-2 minutes or with a smaller upload."
+                ) from e
+            time.sleep(1.5 * attempt)
+        except AuthenticationError as e:
+            raise RuntimeError(
+                "OpenAI authentication failed. Check OPENAI_API_KEY in Vercel env vars."
+            ) from e
+        except RateLimitError as e:
+            raise RuntimeError("OpenAI rate limit reached. Please wait and retry.") from e
+        except BadRequestError as e:
+            raise RuntimeError(f"OpenAI rejected the request: {e}") from e
+        except APIStatusError as e:
+            raise RuntimeError(f"OpenAI API error (status {e.status_code}).") from e
+        except Exception as e:
+            raise RuntimeError(f"OpenAI call failed: {e}") from e
+
+
+def generate_levelB_narrative(*, anon_text: str, self_text: str, metrics: dict, evidence: dict | None = None, speaker_alias: str) -> dict:
     """
     Pure in-memory Level B generator.
     Returns parsed JSON (dict).
-    Safe for Flask / Render / sessions.
+    Safe for Flask / Vercel sessions.
     """
-
     evidence = evidence or {}
 
     prompt = build_levelB_prompt(
@@ -44,53 +112,23 @@ def generate_levelB_narrative(*,anon_text: str,self_text: str,metrics: dict,evid
 
     return parsed
 
+
 def load_text(p: Path) -> str:
     return p.read_text(encoding="utf-8", errors="replace")
+
 
 def load_json(p: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
+
 def try_load_evidence(input_dir: Path) -> dict:
-    # Optional: load evidence_levelA.csv or evidence_levelA.json if you later add it
     ev_json = input_dir / "evidence_levelA.json"
     if ev_json.exists():
         return load_json(ev_json)
     return {}
 
-def call_openai(prompt: str) -> str:
-    """
-    Uses OpenAI python SDK if installed. If not, you’ll get a clear error.
-    """
-    try:
-        from openai import OpenAI
-    except Exception as e:
-        raise RuntimeError("OpenAI SDK not installed. Run: pip install openai") from e
-
-    if not OPENAI_API_KEY:
-        raise RuntimeError("Missing OPENAI_API_KEY. Set it in environment or hardcode OPENAI_API_KEY.")
-
-
-    # Choose your model. Keep it stable.
-    model = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
-
-    resp = client.responses.create(
-        model=model,
-        input=prompt,
-        # Important: we asked for JSON-only in prompt; this just keeps it clean
-        temperature=0.4,
-    )
-
-    # Responses API returns output text in a few possible shapes; this is a safe extraction:
-    out_text = ""
-    for item in resp.output:
-        if item.type == "message":
-            for c in item.content:
-                if c.type in ("output_text", "text"):
-                    out_text += c.text
-    return out_text.strip()
 
 def main():
-    # Windows console can choke on unicode markers; keep prints plain ASCII.
     print("Level B runner started")
 
     if len(sys.argv) < 2:
@@ -109,7 +147,6 @@ def main():
     self_path = input_dir / f"{safe_user}_only_chat.txt"
     metrics_path = input_dir / "metrics_levelA.json"
 
-    # Require files
     for p in [anon_path, self_path, metrics_path]:
         if not p.exists():
             print(f"Missing: {p}")
@@ -120,7 +157,6 @@ def main():
     metrics = load_json(metrics_path)
     evidence = try_load_evidence(input_dir)
 
-    # Build prompt
     prompt = build_levelB_prompt(
         anon_text=anon_text,
         self_text=self_text,
@@ -133,10 +169,6 @@ def main():
     prompt_path.write_text(prompt, encoding="utf-8")
     print(f"Prompt written: {prompt_path}")
 
-    t0 = time.time()
-    print("LEVEL B START")
-    
-    # Call LLM
     print("Calling OpenAI...")
     raw = call_openai(prompt)
 
@@ -144,27 +176,13 @@ def main():
     raw_path.write_text(raw, encoding="utf-8")
     print(f"Level B output written: {raw_path}")
 
-    # Parse JSON output
     try:
         parsed = json.loads(raw)
     except Exception as e:
-        # Save a debug marker so you can see it failed parse
         bad_path = input_dir / "levelB_output_PARSE_FAILED.txt"
         bad_path.write_text(f"JSON parse failed: {e}\n\nRAW:\n{raw}", encoding="utf-8")
         print("JSON parse failed. Wrote levelB_output_PARSE_FAILED.txt")
         sys.exit(1)
-
-    sections = parsed.get("sections", [])
-    blocks = []
-
-    for s in sections:
-        blocks.append(f"## {s['title']}\n\n{s['body']}")
-        if s.get("highlights"):
-            blocks.append("\n".join([f"- {h}" for h in s["highlights"]]))
-
-    final_text = "\n\n".join(blocks)
-    with open(raw_path, "w", encoding="utf-8") as f:
-        f.write(final_text)
 
     json_path = input_dir / "levelB_output.json"
     json_path.write_text(json.dumps(parsed, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -172,10 +190,6 @@ def main():
 
     print("Level B runner finished")
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
-
