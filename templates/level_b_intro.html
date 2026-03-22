@@ -26,6 +26,12 @@
       background: #1589a8;
       transition: width 0.25s ease;
     }
+    .progress-bar.indeterminate {
+      width: 45%;
+      background: linear-gradient(90deg, #0f6f89, #28a3c1, #0f6f89);
+      background-size: 200% 100%;
+      animation: pulse-slide 1.2s linear infinite;
+    }
     .status-line {
       min-height: 1.3em;
       color: #45545a;
@@ -36,6 +42,25 @@
       gap: 12px;
       flex-wrap: wrap;
       align-items: center;
+    }
+    .log-box {
+      display: none;
+      margin: 10px 0 14px;
+      padding: 12px 14px;
+      max-height: 180px;
+      overflow: auto;
+      background: #120651;
+      color: #78ff7b;
+      border: 1px solid #2a2f7d;
+      border-radius: 4px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+    @keyframes pulse-slide {
+      0% { background-position: 0% 0%; margin-left: -30%; }
+      100% { background-position: 200% 0%; margin-left: 85%; }
     }
   </style>
 </head>
@@ -105,6 +130,7 @@
           <div class="progress-bar" id="progressBar"></div>
         </div>
         <p class="status-line" id="statusLine"></p>
+        <pre class="log-box" id="logBox" aria-live="polite"></pre>
         <div class="actions">
           <button id="startBtn" class="button" type="button" disabled>Start Level B Analysis</button>
           <form action="{{ url_for('delete_and_exit') }}" method="post">
@@ -122,35 +148,81 @@
   const progressShell = document.getElementById("progressShell");
   const progressBar = document.getElementById("progressBar");
   const statusLine = document.getElementById("statusLine");
+  const logBox = document.getElementById("logBox");
 
   consentChk.addEventListener("change", () => {
     startBtn.disabled = !consentChk.checked;
   });
 
-  function statusFor(pct) {
-    if (pct < 25) return "Preparing request...";
-    if (pct < 50) return "Collecting Level A artifacts...";
-    if (pct < 75) return "Running narrative synthesis...";
-    if (pct < 100) return "Finalizing report...";
-    return "Opening Level B results...";
+  function addLog(line) {
+    logBox.textContent += line + "\n";
+    logBox.scrollTop = logBox.scrollHeight;
   }
 
-  startBtn.addEventListener("click", () => {
+  function statusForElapsed(seconds) {
+    if (seconds < 5) return "Preparing request...";
+    if (seconds < 15) return "Collecting Level A artifacts...";
+    if (seconds < 40) return "Calling OpenAI model...";
+    return "Still processing. Large chats can take longer.";
+  }
+
+  async function runLevelB() {
     startBtn.disabled = true;
     consentChk.disabled = true;
     progressShell.style.display = "block";
-    let pct = 0;
+    logBox.style.display = "block";
+    progressBar.classList.add("indeterminate");
 
-    const timer = setInterval(() => {
-      pct = Math.min(100, pct + 4);
-      progressBar.style.width = pct + "%";
-      statusLine.textContent = statusFor(pct);
-      if (pct >= 100) {
-        clearInterval(timer);
-        window.location.href = "{{ url_for('level_b') }}";
+    addLog("Level B runner started");
+    const startedAt = Date.now();
+    let lastCheckpoint = 0;
+
+    const ticker = setInterval(() => {
+      const seconds = Math.floor((Date.now() - startedAt) / 1000);
+      statusLine.textContent = statusForElapsed(seconds);
+      if (seconds >= lastCheckpoint + 5) {
+        lastCheckpoint = seconds;
+        addLog("[OpenAI] still working... (" + seconds + "s)");
       }
-    }, 450);
-  });
+    }, 500);
+
+    try {
+      const resp = await fetch("{{ url_for('level_b_generate') }}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify({})
+      });
+
+      let payload = {};
+      try {
+        payload = await resp.json();
+      } catch (_e) {
+        payload = {};
+      }
+
+      if (!resp.ok || !payload.ok) {
+        const msg = payload.error ? payload.error : "Unknown server error.";
+        throw new Error(msg);
+      }
+
+      addLog("Level B generation complete.");
+      statusLine.textContent = "Opening Level B results...";
+      window.location.href = payload.redirect || "{{ url_for('level_b') }}";
+    } catch (err) {
+      addLog("Error: " + err.message);
+      statusLine.textContent = "Level B failed. Please retry.";
+      startBtn.disabled = false;
+      consentChk.disabled = false;
+      progressBar.classList.remove("indeterminate");
+    } finally {
+      clearInterval(ticker);
+    }
+  }
+
+  startBtn.addEventListener("click", runLevelB);
 </script>
 
 <script src="/static/js/jquery.min.js"></script>

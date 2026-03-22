@@ -494,6 +494,69 @@ def level_b_intro():
     )
 
 
+def ensure_level_b_report(run_id: str, safe_user: str):
+    # Reuse existing Level B output (avoids repeat LLM calls).
+    report = load_result_json(run_id, "levelB_output.json")
+    if report is not None:
+        return report
+
+    anon_filename = f"{safe_user}_anonymized_chat.txt"
+    self_filename = f"{safe_user}_only_chat.txt"
+    anon_text = load_result_text(run_id, anon_filename)
+    self_text = load_result_text(run_id, self_filename)
+    metrics = load_level_a_metrics(run_id)
+
+    if not anon_text or not self_text or not metrics:
+        raise RuntimeError(
+            "Level B needs completed Level A artifacts. Please run Level A first and try again."
+        )
+
+    store.safe_update_run(run_id, {"status": "levelb_running"})
+    from levelB_runner import generate_levelB_narrative
+
+    report = generate_levelB_narrative(
+        anon_text=anon_text,
+        self_text=self_text,
+        metrics=metrics,
+        evidence={},
+        speaker_alias=safe_user,
+    )
+
+    try:
+        save_result_json(run_id, "levelB_output.json", report)
+    except Exception as e:
+        print(f"[Level B save warning] {e}")
+
+    store.safe_update_run(
+        run_id,
+        {
+            "status": "levelb_done",
+            "levelb_path": f"{run_id}/levelB_output.json",
+        },
+    )
+    return report
+
+
+@app.route("/WhatYouSay/level-b-generate", methods=["POST"])
+def level_b_generate():
+    if not session.get("parsed_data"):
+        return jsonify({"ok": False, "error": "Session expired. Please re-upload your chat."}), 400
+    if PAYWALL_ENABLED and (not session.get("paid", False)):
+        return jsonify({"ok": False, "error": "Payment required for Level B."}), 403
+
+    run_id = session.get("run_id")
+    safe_user = session.get("safe_user")
+    if not run_id or not safe_user:
+        return jsonify({"ok": False, "error": "Session context missing."}), 400
+
+    try:
+        ensure_level_b_report(run_id, safe_user)
+        return jsonify({"ok": True, "redirect": url_for("level_b")})
+    except Exception as e:
+        store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
+        return jsonify({"ok": False, "error_type": type(e).__name__, "error": str(e)}), 500
+
+
 # -----------------------------
 # LEVEL_B call
 # -----------------------------
@@ -510,54 +573,16 @@ def level_b():
     if not run_id or not safe_user:
         return redirect(url_for("index"))
 
-    # Reuse existing Level B output if available (avoids repeat LLM calls).
-    report = load_result_json(run_id, "levelB_output.json")
-
-    if report is None:
-        anon_filename = f"{safe_user}_anonymized_chat.txt"
-        self_filename = f"{safe_user}_only_chat.txt"
-        anon_text = load_result_text(run_id, anon_filename)
-        self_text = load_result_text(run_id, self_filename)
-        metrics = load_level_a_metrics(run_id)
-
-        if not anon_text or not self_text or not metrics:
-            return render_template(
-                "error.html",
-                message="Level B needs completed Level A artifacts. Please run Level A first and try again.",
-            )
-
-        try:
-            store.safe_update_run(run_id, {"status": "levelb_running"})
-            from levelB_runner import generate_levelB_narrative
-
-            report = generate_levelB_narrative(
-                anon_text=anon_text,
-                self_text=self_text,
-                metrics=metrics,
-                evidence={},
-                speaker_alias=safe_user,
-            )
-
-            try:
-                save_result_json(run_id, "levelB_output.json", report)
-            except Exception as e:
-                print(f"[Level B save warning] {e}")
-
-            store.safe_update_run(
-                run_id,
-                {
-                    "status": "levelb_done",
-                    "levelb_path": f"{run_id}/levelB_output.json",
-                },
-            )
-        except Exception as e:
-            store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
-            err_type = type(e).__name__
-            return render_template(
-                "error.html",
-                title="Level B generation failed",
-                message=f"Level B generation failed ({err_type}). Details: {e}",
-            )
+    try:
+        report = ensure_level_b_report(run_id, safe_user)
+    except Exception as e:
+        store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
+        err_type = type(e).__name__
+        return render_template(
+            "error.html",
+            title="Level B generation failed",
+            message=f"Level B generation failed ({err_type}). Details: {e}",
+        )
 
     return render_template(
         "level_b.html",
