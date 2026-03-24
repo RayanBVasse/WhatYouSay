@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Deletion Receipt - WhatYouSay</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/forms.css">
+  <style>
+    .receipt-wrap {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    .receipt-card {
+      margin-top: 0.6rem;
+      border: 1px solid #cde3d2;
+      border-left: 6px solid #2a9f4b;
+      border-radius: 12px;
+      background: #f2fbf4;
+      padding: 1rem 1.1rem;
+      color: #1f4528;
+    }
+    .receipt-card h2 {
+      margin-bottom: 0.45rem;
+      color: #1d6f35;
+    }
+    .receipt-card p {
+      margin: 0.35rem 0;
+      line-height: 1.48;
+    }
+    .receipt-list {
+      margin: 0.55rem 0 0.35rem 1rem;
+      color: #1f4528;
+    }
+    .receipt-list li {
+      margin-bottom: 0.2rem;
+    }
+    .receipt-warn {
+      color: #7a4f10;
+    }
+    .receipt-actions {
+      margin-top: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .mini-note {
+      margin-top: 0.45rem;
+      color: #486156;
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+<div id="page-wrapper">
+  <div id="header-wrapper">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <header id="header">
+            <h1><a href="{{ url_for('index') }}" id="logo">WhatYouSay</a></h1>
+            <nav id="nav">
+              <a href="{{ url_for('index') }}">Homepage</a>
+              <a href="{{ url_for('method_page') }}">Method</a>
+              <a href="{{ url_for('publication_page') }}">Publication</a>
+              <a href="{{ url_for('privacy_page') }}">Privacy</a>
+              <a href="#">HowWeConnect</a>
+            </nav>
+          </header>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div class="container receipt-wrap">
+      <section class="receipt-card" aria-live="polite">
+        <h2>Deletion receipt</h2>
+        <p>
+          Your data deletion request has been processed for run
+          <strong>{{ receipt.run_id_short }}</strong> at
+          <strong>{{ receipt.deleted_at_utc }}</strong>.
+        </p>
+
+        <ul class="receipt-list">
+          <li>Upload files removed: <strong>{{ receipt.uploads_deleted }}</strong></li>
+          <li>Result files removed: <strong>{{ receipt.result_objects_deleted }}</strong></li>
+          <li>Run records removed: <strong>{{ receipt.run_rows_deleted }}</strong></li>
+        </ul>
+
+        {% if receipt.verification == "confirmed" %}
+        <p>Verification complete: no active storage objects were found after deletion.</p>
+        {% elif receipt.verification == "incomplete" %}
+        <p class="receipt-warn">
+          Verification warning: some objects still appeared after deletion. Please run Delete &amp; Exit again.
+        </p>
+        {% else %}
+        <p class="receipt-warn">Verification was limited, but the deletion request was sent.</p>
+        {% endif %}
+
+        {% if receipt.errors_count and receipt.errors_count > 0 %}
+        <p class="receipt-warn">Warnings during deletion: {{ receipt.errors_count }}.</p>
+        {% endif %}
+
+        <div class="receipt-actions">
+          <a class="button" href="{{ url_for('index') }}">Back to Homepage</a>
+        </div>
+        <p class="mini-note">If you need a record, take a screenshot of this receipt before leaving the page.</p>
+      </section>
+    </div>
+  </div>
+</div>
+</body>
+</html>

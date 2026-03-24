@@ -20,6 +20,28 @@
         position: relative;
         z-index: 120;
       }
+      .deletion-receipt {
+        margin-bottom: 1rem;
+        padding: 0.75rem 0.9rem;
+        border: 1px solid #cfe4d2;
+        border-left: 5px solid #299c4b;
+        border-radius: 8px;
+        background: #f2fbf4;
+        color: #1f4c2a;
+      }
+      .deletion-receipt h3 {
+        margin: 0 0 0.3rem;
+        font-size: 1.05rem;
+        color: #1f6f35;
+      }
+      .deletion-receipt p {
+        margin: 0.15rem 0;
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+      .deletion-receipt .warn {
+        color: #7a4f10;
+      }
       .button.is-disabled,
       .button[disabled] {
         opacity: 0.5;
@@ -257,6 +279,31 @@
 
       <div id="main">
         <div class="container">
+          {% if deletion_receipt %}
+          <section class="deletion-receipt" aria-live="polite">
+            <h3>Deletion receipt</h3>
+            <p>
+              Run <strong>{{ deletion_receipt.run_id_short }}</strong> deleted at
+              <strong>{{ deletion_receipt.deleted_at_utc }}</strong>.
+            </p>
+            <p>
+              Removed: {{ deletion_receipt.uploads_deleted }} upload file,
+              {{ deletion_receipt.result_objects_deleted }} result files,
+              {{ deletion_receipt.run_rows_deleted }} run record.
+            </p>
+            {% if deletion_receipt.verification == "confirmed" %}
+            <p>Verification: no active processing objects were found for this run after deletion.</p>
+            {% elif deletion_receipt.verification == "incomplete" %}
+            <p class="warn">Verification: some objects still appeared in storage after deletion. Please retry Delete &amp; Exit.</p>
+            {% else %}
+            <p class="warn">Verification: not fully checked. Deletion request was still sent.</p>
+            {% endif %}
+            {% if deletion_receipt.errors_count and deletion_receipt.errors_count > 0 %}
+            <p class="warn">Warnings during deletion: {{ deletion_receipt.errors_count }}.</p>
+            {% endif %}
+          </section>
+          {% endif %}
+
           <div class="row main-row">
             <div class="col-4 col-12-medium">
               <section class="compact-text dense-copy">
@@ -278,11 +325,9 @@
                 <h2>Legal and responsible use</h2>
                 <p>
                   This tool anonymises and analyses all messages in the uploaded file.
-                  If you upload a group conversation, you confirm that all participants have been informed
-                  and consent to this analysis. You also confirm that the uploaded conversation does not
-                  contain messages from individuals under 18, or that appropriate parental consent has
-                  been obtained. The platform operator does not verify consent and is not liable for
-                  unauthorized uploads.
+                  By uploading, you confirm that you are authorized to process this text under applicable
+                  privacy/data-protection law. The platform operator does not verify consent and is not
+                  liable for unauthorized uploads.
                 </p>
               </section>
             </div>
@@ -293,7 +338,7 @@
                 <div class="form-wrapper">
                   <form id="upload-form" method="POST" action="/WhatYouSay/upload" enctype="multipart/form-data">
                     <div>
-                      <label><strong>User handle</strong></label><br>
+                      <label><strong>Your User Handle</strong></label><br>
                       <input type="text" name="user_handle" required>
                     </div>
                     <br>
@@ -346,10 +391,8 @@
                     <div class="compact-text dense-copy">
                       By uploading, you confirm that you are legally authorized to process this text and comply
                       with applicable privacy/data-protection law. This tool anonymises and analyses all messages
-                      in the uploaded file. If this is a group conversation, you confirm all participants were informed
-                      and consented to this analysis. You confirm the upload does not contain messages from individuals
-                      under 18, or that appropriate parental consent has been obtained. The platform operator does not
-                      verify consent and is not liable for unauthorized uploads.
+                      in the uploaded file. The platform operator does not verify consent and is not liable for
+                      unauthorized uploads.
                     </div>
 
                     <div class="upload-actions">

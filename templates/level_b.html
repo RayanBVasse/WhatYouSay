@@ -33,6 +33,16 @@
       line-height: 1.6;
       font-style: italic;
     }
+    .intro-context {
+      margin: 10px 0 0;
+      color: #4a5a62;
+      line-height: 1.6;
+      font-size: 1rem;
+    }
+    .intro-context a {
+      color: #1a6f94;
+      text-decoration: underline;
+    }
 
     .report-grid {
       display: grid;
@@ -224,6 +234,71 @@
       color: #53636b;
       margin-bottom: 10px;
     }
+    .dynamics-card {
+      border-left: 6px solid #4e84a6;
+      background: linear-gradient(180deg, #f8fbfe 0%, #f3f8fc 100%);
+    }
+    .dynamics-expanded h3 {
+      margin-bottom: 8px;
+    }
+    .dynamics-expanded p {
+      margin: 0 0 8px;
+      color: #344a55;
+      line-height: 1.58;
+      font-size: 0.97rem;
+    }
+    .dynamics-expanded p:last-child {
+      margin-bottom: 0;
+    }
+    .dynamics-subhead {
+      margin-top: 6px;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+      color: #214453;
+    }
+    .dynamics-grid {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .dynamics-item {
+      border: 1px solid #d8e6ef;
+      border-radius: 10px;
+      background: #ffffff;
+      padding: 8px 10px;
+      color: #32444d;
+      line-height: 1.45;
+      font-size: 0.94rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .dynamics-item::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      margin-top: 0.42em;
+      border-radius: 999px;
+      background: #3e91b6;
+      flex: 0 0 8px;
+    }
+    .dynamics-reliability {
+      margin-top: 8px;
+      border: 1px solid #d4e2eb;
+      border-radius: 9px;
+      background: #eef5fb;
+      padding: 8px 10px;
+      color: #2f4957;
+    }
+    .dynamics-reliability strong {
+      color: #1f5e7a;
+    }
+    .dynamics-foot {
+      margin: 6px 0 0;
+      color: #5b6b74;
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
 
     .chart-wrap {
       height: 190px;
@@ -339,6 +414,14 @@
           What follows is a reflective interpretation of your communication patterns in this group.
           It is not a diagnosis or judgment, but a narrative lens on how you show up.
         </p>
+        <p class="intro-context">
+          The patterns below reflect this conversation, with these people, during this period. They are not a fixed
+          portrait of who you are. Your communication style varies across relationships and environments; that variation
+          is itself meaningful, and a single export captures only one slice of it.
+          <a href="https://doi.org/10.5281/zenodo.18890804" target="_blank" rel="noopener noreferrer">
+            Vasse (2026), Measuring Within-Person Variation in Written Communication Patterns Across Social Contexts
+          </a>.
+        </p>
       </section>
 
       <div class="report-grid">
@@ -425,21 +508,57 @@
                   <a href="https://www.saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm" target="_blank" rel="noopener noreferrer">Resource page and references</a>.
                 </li>
                 <li>
-                  Araque, O., Gatti, L., &amp; Kalimeri, K. (2022). LibertyMFD: A Lexicon to Assess the Moral Foundation of Liberty.
-                  <a href="https://doi.org/10.1145/3524458.3547264" target="_blank" rel="noopener noreferrer">DOI: 10.1145/3524458.3547264</a>.
+                  Araque, O., Gatti, L., &amp; Kalimeri, K. (2020). <em>MoralStrength: Exploiting a moral lexicon and embedding similarity for moral foundations prediction</em>. Knowledge-Based Systems, 246.
+                  <a href="https://doi.org/10.1016/j.knosys.2019.105184" target="_blank" rel="noopener noreferrer">https://doi.org/10.1016/j.knosys.2019.105184</a>.
                 </li>
                 <li>
-                  Araque, O., Gatti, L., &amp; Kalimeri, K. (2019). MoralStrength.
-                  <a href="https://arxiv.org/abs/1904.08314" target="_blank" rel="noopener noreferrer">arXiv:1904.08314</a>.
+                  Araque, O., Gatti, L., &amp; Kalimeri, K. (2022). <em>LibertyMFD: A Lexicon to Assess the Moral Foundation of Liberty. GoodIT '22: Proceedings of the 2022 ACM Conference on Information Technology for Social Good</em>.
+                  <a href="https://doi.org/10.1145/3524458.3547264" target="_blank" rel="noopener noreferrer">DOI: 10.1145/3524458.3547264</a>.
                 </li>
               </ul>
             </article>
           </section>
 
-          <section class="hwc-card">
-            <h3>Looking Ahead - HWC</h3>
+          <section class="dynamics-card dynamics-expanded">
+            <h3>Group dynamics</h3>
+            <p>How your interaction style sits in this specific conversation.</p>
+
+            <div class="dynamics-grid">
+              {% if sidebar.group_points %}
+                {% for gp in sidebar.group_points %}
+                <div class="dynamics-item">{{ gp }}</div>
+                {% endfor %}
+              {% else %}
+                <div class="dynamics-item">No group-dynamics summary available for this run.</div>
+              {% endif %}
+            </div>
+            <div class="dynamics-reliability">
+              Reliability band: <strong>{{ sidebar.confidence }}</strong>.
+            </div>
+
+            <h4 class="dynamics-subhead">What these patterns mean</h4>
             <p>
-              HWC extends this analysis across time, tracking how participation,
+              Mode and role patterns are derived from how your messages function in the conversation, not from their content or tone.
+            </p>
+            <p>
+              <strong>Mode: assertive</strong> means your messages tend to take a clear position, introduce information, or push a direction rather than hedging or deferring.
+            </p>
+            <p>
+              <strong>Role: responder</strong> means a significant share of your messages follow someone else's; you engage with what's already on the table rather than opening new threads.
+            </p>
+            <p>
+              <strong>Role: challenger</strong> means your messages frequently introduce a correction, counterpoint, or clarification to what was said before.
+            </p>
+            <p>
+              These two role patterns often appear together. Responding and challenging are not opposites. You can engage primarily in response to others while consistently pushing back on what they say. That combination often signals someone who is attentive and engaged but not passive.
+            </p>
+            <p class="dynamics-foot"><strong>These are patterns in this conversation, not fixed characteristics.</strong></p>
+          </section>
+
+          <section class="hwc-card">
+            <h3>Looking Ahead - HowWeConnect</h3>
+            <p>
+              HowWeConnect extends this analysis across time, tracking how participation,
               emotional tone, and relational role evolve as group context changes.
             </p>
             <ul class="tight-list">
@@ -447,10 +566,10 @@
               <li>Where tone stabilizes or destabilizes group climate.</li>
               <li>Early signals of role transitions.</li>
             </ul>
-            <p class="hwc-muted">HWC is a longitudinal extension and is currently in progress.</p>
+            <p class="hwc-muted">HowWeConnect is a longitudinal extension and is currently in progress.</p>
             <div class="action-row">
-              <button class="button" disabled>HWC - Coming Soon</button>
-              <button class="button" disabled>Download Results (ZIP)</button>
+              <button class="button" disabled>HowWeConnect - Coming Soon</button>
+              <a class="button" href="{{ url_for('download_results_zip') }}">Download Results (ZIP)</a>
               <form action="{{ url_for('delete_and_exit') }}" method="post">
                 <button class="button" type="submit">Delete My Data</button>
               </form>
@@ -519,20 +638,6 @@
             {% endif %}
           </section>
 
-          <section class="side-card">
-            <h3>Group dynamics</h3>
-            <p>High-level style cues from Level A interaction patterns.</p>
-            <ul class="tight-list">
-              {% if sidebar.group_points %}
-                {% for gp in sidebar.group_points %}
-                <li>{{ gp }}</li>
-                {% endfor %}
-              {% else %}
-                <li>No group-dynamics summary available.</li>
-              {% endif %}
-              <li>Reliability band: {{ sidebar.confidence }}.</li>
-            </ul>
-          </section>
         </aside>
       </div>
     </div>

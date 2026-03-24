@@ -4,9 +4,11 @@ import re
 import tempfile
 import uuid
 import json
+from io import BytesIO
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from collections import Counter
+from zipfile import ZipFile, ZIP_DEFLATED
 from flask import ( Flask, render_template, request, redirect, url_for, session, Response, jsonify)
 from werkzeug.utils import secure_filename
 
@@ -480,7 +482,15 @@ def delete_run_objects(run_id: str, upload_path: str):
 # -----------------------------
 @app.route("/WhatYouSay/", methods=["GET"])
 def index():
-    return render_template("index.html")
+    deletion_receipt = session.pop("deletion_receipt", None)
+    return render_template("index.html", deletion_receipt=deletion_receipt)
+
+@app.route("/WhatYouSay/deletion-receipt", methods=["GET"])
+def deletion_receipt_page():
+    receipt = session.pop("deletion_receipt", None)
+    if not receipt:
+        return redirect(url_for("index"))
+    return render_template("deletion_receipt.html", receipt=receipt)
 
 
 @app.route("/WhatYouSay/method.html", methods=["GET"])
@@ -728,6 +738,65 @@ def serve_results(safe_user, filename):
         headers={"Cache-Control": "no-store"},
     )
 
+
+@app.route("/WhatYouSay/results/download.zip", methods=["GET"])
+def download_results_zip():
+    run_id = session.get("run_id")
+    safe_user = session.get("safe_user") or "user"
+    if not run_id:
+        return render_template("error.html", message="Session expired. Please re-upload your chat.")
+
+    if not store.ready:
+        return render_template("error.html", message="Storage is not configured. Please try again later.")
+
+    try:
+        result_paths = sorted(store.list_prefix(store.results_bucket, run_id))
+    except Exception as e:
+        return render_template("error.html", message=f"Unable to list result files: {e}")
+
+    if not result_paths:
+        return render_template("error.html", message="No result files were found for this run.")
+
+    zip_buffer = BytesIO()
+    skipped = []
+    with ZipFile(zip_buffer, "w", ZIP_DEFLATED) as zf:
+        for object_path in result_paths:
+            try:
+                raw = store.download_bytes(store.results_bucket, object_path)
+                if isinstance(raw, str):
+                    raw = raw.encode("utf-8")
+            except Exception as e:
+                skipped.append({"path": object_path, "error": str(e)})
+                continue
+
+            rel_name = object_path
+            prefix = f"{run_id}/"
+            if object_path.startswith(prefix):
+                rel_name = object_path[len(prefix):]
+            zf.writestr(f"results/{rel_name}", raw)
+
+        manifest = {
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "run_id": run_id,
+            "files_requested": len(result_paths),
+            "files_skipped": len(skipped),
+            "skipped": skipped[:25],
+        }
+        zf.writestr("manifest.json", json.dumps(manifest, indent=2, ensure_ascii=False))
+
+    zip_buffer.seek(0)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    safe_user_name = re.sub(r"[^a-zA-Z0-9_-]+", "-", safe_user).strip("-") or "user"
+    filename = f"wys-results-{safe_user_name}-{timestamp}.zip"
+    return Response(
+        zip_buffer.getvalue(),
+        mimetype="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
 # -----------------------------
 # LEVEL_B intro call
 # -----------------------------
@@ -878,17 +947,40 @@ def delete_and_exit():
     run_id = session.get("run_id")
     upload_path = session.get("upload_path")
     now_iso = datetime.now(timezone.utc).isoformat()
+    deleted_at_label = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    run_short = (run_id or "unknown")[:8]
 
-    _, _, errors = delete_run_objects(run_id, upload_path)
+    deleted_upload, deleted_results, errors = delete_run_objects(run_id, upload_path)
     if errors:
         print(f"[Delete errors] {'; '.join(errors)}")
 
+    run_row_deleted = 0
     if run_id:
         # Prefer hard delete for privacy; fallback to soft marker if schema/rules differ.
         try:
             store.delete_run(run_id)
+            run_row_deleted = 1
         except Exception:
+            errors.append("row_delete_failed")
             store.safe_update_run(run_id, {"status": "deleted", "deleted_at": now_iso})
+
+    remaining_results = None
+    upload_still_exists = None
+    if store.ready and run_id:
+        try:
+            remaining_results = len(store.list_prefix(store.results_bucket, run_id))
+        except Exception:
+            remaining_results = None
+    if store.ready and upload_path:
+        try:
+            store.download_bytes(store.upload_bucket, upload_path)
+            upload_still_exists = 1
+        except Exception:
+            upload_still_exists = 0
+
+    verification = "unchecked"
+    if remaining_results is not None and upload_still_exists is not None:
+        verification = "confirmed" if (remaining_results == 0 and upload_still_exists == 0) else "incomplete"
 
     # delete local temp files if present
     chat_path = session.get("chat_path")
@@ -898,8 +990,19 @@ def delete_and_exit():
         except Exception:
             pass
 
+    receipt = {
+        "deleted_at_utc": deleted_at_label,
+        "run_id_short": run_short,
+        "uploads_deleted": int(deleted_upload),
+        "result_objects_deleted": int(deleted_results),
+        "run_rows_deleted": int(run_row_deleted),
+        "errors_count": len(errors),
+        "verification": verification,
+    }
+
     session.clear()
-    return redirect(url_for("index"))
+    session["deletion_receipt"] = receipt
+    return redirect(url_for("deletion_receipt_page"))
 
 
 @app.route("/WhatYouSay/cron/cleanup", methods=["GET"])
