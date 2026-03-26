@@ -38,6 +38,24 @@
         margin: 0.3rem 0 0 1.2rem;
         list-style: disc;
       }
+      #footer-wrapper.compact-footer {
+        padding: 1.2em 0 1em;
+      }
+      .compact-footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+      }
+      .compact-footer-links a {
+        text-decoration: none;
+      }
+      #footer-wrapper.compact-footer #copyright {
+        margin: 0.8em 0 0 0;
+        padding: 0.9em 0 0 0;
+      }
     </style>
   </head>
   <body>
@@ -167,11 +185,18 @@
         </div>
       </div>
 
-      <div id="footer-wrapper">
+      <div id="footer-wrapper" class="compact-footer">
         <div class="container">
           <div class="row">
-            <div class="col-8 col-12-medium"></div>
-            <div class="col-4 col-12-medium"></div>
+            <div class="col-12">
+              <div class="compact-footer-links">
+                <a href="/WhatYouSay/">Homepage</a>
+                <a href="/WhatYouSay/method.html">Method</a>
+                <a href="/WhatYouSay/publication.html">Publication</a>
+                <a href="/WhatYouSay/privacy.html">Privacy</a>
+                <a href="#">HowWeConnect</a>
+              </div>
+            </div>
           </div>
           <div class="row">
             <div class="col-12">

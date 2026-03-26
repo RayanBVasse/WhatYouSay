@@ -40,6 +40,24 @@
         border-radius: 8px;
         padding: 0.7rem 0.85rem;
       }
+      #footer-wrapper.compact-footer {
+        padding: 1.2em 0 1em;
+      }
+      .compact-footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+      }
+      .compact-footer-links a {
+        text-decoration: none;
+      }
+      #footer-wrapper.compact-footer #copyright {
+        margin: 0.8em 0 0 0;
+        padding: 0.9em 0 0 0;
+      }
     </style>
   </head>
   <body>
@@ -88,10 +106,10 @@
                 <article class="pub-block">
                   <h3>2) WYS-specific publication</h3>
                   <p>
-                    DOI: <a href="https://doi.org/10.5281/zenodo.18890804" target="_blank" rel="noopener noreferrer">10.5281/zenodo.18890804</a>
+                    DOI: <a href="https://doi.org/10.5281/zenodo.19230220" target="_blank" rel="noopener noreferrer">10.5281/zenodo.19230220</a>
                   </p>
                   <p>
-                    Measuring Within-Person Variation in Written Communication Patterns Across Social Contexts.
+                    What You Say (WYS): Automated Two-Level Pipeline for Interpretive Analysis of Digital Conversation (Preprint, 2026-03-26).
                   </p>
                 </article>
 
@@ -110,8 +128,8 @@
                 <article class="pub-block">
                   <h3>4) How to cite</h3>
                   <div class="cite-box">
-                    Vasse, R. B. (2026). WhatYouSay: Automated Two-Level Analysis of Digital Conversation Exports.
-                    Living Literature. Available at: wys.living-literature.org
+                    Vasse, R. B. (2026). What You Say (WYS): Automated Two-Level Pipeline for Interpretive Analysis of Digital Conversation (Preprint).
+                    Zenodo. <a href="https://doi.org/10.5281/zenodo.19230220" target="_blank" rel="noopener noreferrer">https://doi.org/10.5281/zenodo.19230220</a>.
                   </div>
                   <p>
                     If you use WhatYouSay in academic research, please cite this tool and the relevant papers listed above.
@@ -123,11 +141,18 @@
         </div>
       </div>
 
-      <div id="footer-wrapper">
+      <div id="footer-wrapper" class="compact-footer">
         <div class="container">
           <div class="row">
-            <div class="col-8 col-12-medium"></div>
-            <div class="col-4 col-12-medium"></div>
+            <div class="col-12">
+              <div class="compact-footer-links">
+                <a href="/WhatYouSay/">Homepage</a>
+                <a href="/WhatYouSay/method.html">Method</a>
+                <a href="/WhatYouSay/publication.html">Publication</a>
+                <a href="/WhatYouSay/privacy.html">Privacy</a>
+                <a href="#">HowWeConnect</a>
+              </div>
+            </div>
           </div>
           <div class="row">
             <div class="col-12">
