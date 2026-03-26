@@ -1,13 +1,15 @@
 import os
 import sys
 import re
+import time
 import tempfile
 import uuid
 import json
 from io import BytesIO
+from threading import Lock
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from collections import Counter
+from collections import Counter, defaultdict, deque
 from zipfile import ZipFile, ZIP_DEFLATED
 from flask import ( Flask, render_template, request, redirect, url_for, session, Response, jsonify)
 from werkzeug.utils import secure_filename
@@ -36,12 +38,31 @@ MAX_FILE_MB = 5
 PAYWALL_ENABLED = os.environ.get("PAYWALL_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 CLEANUP_RETENTION_HOURS = int(os.environ.get("CLEANUP_RETENTION_HOURS", "24"))
 CLEANUP_TOKEN = (os.environ.get("CRON_SECRET") or os.environ.get("CLEANUP_TOKEN") or "").strip()
+IS_PRODUCTION = (os.environ.get("VERCEL_ENV", "").strip().lower() == "production")
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+SECRET_KEY = (os.environ.get("SECRET_KEY") or "").strip()
+ALLOW_INSECURE_DEV_SECRET = os.environ.get("ALLOW_INSECURE_DEV_SECRET", "").strip().lower() in {"1", "true", "yes", "on"}
+if not SECRET_KEY or SECRET_KEY == "dev-secret-change-me":
+    if ALLOW_INSECURE_DEV_SECRET:
+        SECRET_KEY = "dev-secret-change-me"
+    else:
+        raise RuntimeError("SECRET_KEY is missing or weak. Set a strong SECRET_KEY in environment variables.")
+app.secret_key = SECRET_KEY
 app.config["UPLOAD_FOLDER"] = str(UPLOAD_DIR)
 app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_MB * 1024 * 1024
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = IS_PRODUCTION
 store = SupabaseStore()
+
+# Simple in-memory burst controls (best-effort on serverless instances).
+RATE_LIMITS = {
+    "upload": (8, 10 * 60),            # 8 upload attempts / 10 min per IP
+    "level_b_generate": (6, 10 * 60),  # 6 generation requests / 10 min per IP
+}
+RATE_BUCKETS = defaultdict(deque)
+RATE_LOCK = Lock()
 
     
     
@@ -454,6 +475,42 @@ def _cron_authorized() -> bool:
     return token == CLEANUP_TOKEN
 
 
+def _client_ip() -> str:
+    xff = (request.headers.get("x-forwarded-for") or "").strip()
+    if xff:
+        return (xff.split(",")[0] or "").strip() or "unknown"
+    return (request.remote_addr or "unknown").strip()
+
+
+def _enforce_rate_limit(bucket_name: str):
+    limit_window = RATE_LIMITS.get(bucket_name)
+    if not limit_window:
+        return True, 0
+    limit, window_seconds = limit_window
+    key = f"{bucket_name}:{_client_ip()}"
+    now = time.time()
+
+    with RATE_LOCK:
+        q = RATE_BUCKETS[key]
+        while q and (now - q[0]) > window_seconds:
+            q.popleft()
+        if len(q) >= limit:
+            retry_after = max(1, int(window_seconds - (now - q[0])))
+            return False, retry_after
+        q.append(now)
+    return True, 0
+
+
+@app.after_request
+def _security_headers(resp):
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "DENY")
+    resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if request.path.startswith("/WhatYouSay/") and not request.path.startswith("/static/"):
+        resp.headers.setdefault("Cache-Control", "no-store")
+    return resp
+
+
 def delete_run_objects(run_id: str, upload_path: str):
     deleted_upload = 0
     deleted_results = 0
@@ -518,9 +575,13 @@ def root():
 
 @app.route("/WhatYouSay/upload", methods=["POST"])
 def upload():
-    print("CONTENT TYPE:", request.content_type)
-    print("FORM KEYS:", list(request.form.keys()))
-    print("FILES KEYS:", list(request.files.keys()))
+    allowed, retry_after = _enforce_rate_limit("upload")
+    if not allowed:
+        return (
+            render_template("error.html", message="Too many upload attempts. Please wait and try again."),
+            429,
+            {"Retry-After": str(retry_after)},
+        )
     
     user_handle = request.form.get("user_handle", "").strip()
     platform = request.form.get("platform", "").strip()  # optional, if you still collect it
@@ -549,22 +610,22 @@ def upload():
             data=raw_bytes,
             content_type=guess_mime_type(filename),
         )
-    except Exception as e:
-        return render_template("error.html", message=f"Upload storage error: {e}")
+    except Exception:
+        return render_template("error.html", message="Upload storage is temporarily unavailable. Please retry."), 503
 
     save_path = write_temp_chat(run_id, raw_bytes)
 
     # Resolve user -> match against canonicalized speakers from parsed file
     try:
         safe_user, resolved_user_handle, messages, speaker_counts = resolve_user_handle_from_file(save_path, user_handle)
-    except Exception as e:
+    except Exception:
         try:
             store.remove_many(store.upload_bucket, [upload_path])
         except Exception:
             pass
         return render_template(
             "error.html",
-            message=f"Unable to parse this chat export. Please upload a standard .txt export (WhatsApp/Telegram/Signal). Details: {e}",
+            message="Unable to parse this chat export. Please upload a standard .txt export (WhatsApp/Telegram/Signal).",
         )
     if not safe_user:
         # cleanup upload
@@ -641,8 +702,6 @@ def upload():
         "upload_path": upload_path,
     })
 
-    print("TOP_SPEAKERS:", speaker_counts.most_common(15))
-
     # Confirmation page
     return render_template(
         "confirmation.html",
@@ -708,7 +767,10 @@ def level_a():
             metrics = load_level_a_metrics(run_id) or metrics
         except Exception as e:
             store.safe_update_run(run_id, {"status": "error", "error_message": str(e)})
-            return render_template("error.html", message=str(e))
+            return render_template(
+                "error.html",
+                message="Level A processing failed. Please retry the upload.",
+            ), 500
 
     return render_template(
         "level_a.html",
@@ -729,8 +791,8 @@ def serve_results(safe_user, filename):
     object_path = f"{run_id}/{filename}"
     try:
         data = store.download_bytes(store.results_bucket, object_path)
-    except Exception as e:
-        return render_template("error.html", message=f"Unable to load result file: {e}")
+    except Exception:
+        return render_template("error.html", message="Unable to load result file."), 404
 
     return Response(
         data,
@@ -751,8 +813,8 @@ def download_results_zip():
 
     try:
         result_paths = sorted(store.list_prefix(store.results_bucket, run_id))
-    except Exception as e:
-        return render_template("error.html", message=f"Unable to list result files: {e}")
+    except Exception:
+        return render_template("error.html", message="Unable to list result files right now."), 503
 
     if not result_paths:
         return render_template("error.html", message="No result files were found for this run.")
@@ -844,8 +906,8 @@ def ensure_level_b_report(run_id: str, safe_user: str):
 
     try:
         save_result_json(run_id, "levelB_output.json", report)
-    except Exception as e:
-        print(f"[Level B save warning] {e}")
+    except Exception:
+        pass
 
     store.safe_update_run(
         run_id,
@@ -859,6 +921,14 @@ def ensure_level_b_report(run_id: str, safe_user: str):
 
 @app.route("/WhatYouSay/level-b-generate", methods=["POST"])
 def level_b_generate():
+    allowed, retry_after = _enforce_rate_limit("level_b_generate")
+    if not allowed:
+        return (
+            jsonify({"ok": False, "error": "Too many requests. Please wait and try again."}),
+            429,
+            {"Retry-After": str(retry_after)},
+        )
+
     if not session.get("parsed_data"):
         return jsonify({"ok": False, "error": "Session expired. Please re-upload your chat."}), 400
     if PAYWALL_ENABLED and (not session.get("paid", False)):
@@ -874,7 +944,10 @@ def level_b_generate():
         return jsonify({"ok": True, "redirect": url_for("level_b")})
     except Exception as e:
         store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
-        return jsonify({"ok": False, "error_type": type(e).__name__, "error": str(e)}), 500
+        return jsonify({
+            "ok": False,
+            "error": "Level B generation failed. Please retry in a moment.",
+        }), 500
 
 
 # -----------------------------
@@ -897,12 +970,11 @@ def level_b():
         report = ensure_level_b_report(run_id, safe_user)
     except Exception as e:
         store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
-        err_type = type(e).__name__
         return render_template(
             "error.html",
             title="Level B generation failed",
-            message=f"Level B generation failed ({err_type}). Details: {e}",
-        )
+            message="Level B generation failed. Please retry. If the issue persists, start a new upload.",
+        ), 500
 
     level_a_metrics = load_level_a_metrics(run_id) or {}
     self_lines = _extract_self_lines(run_id, safe_user)
@@ -951,8 +1023,6 @@ def delete_and_exit():
     run_short = (run_id or "unknown")[:8]
 
     deleted_upload, deleted_results, errors = delete_run_objects(run_id, upload_path)
-    if errors:
-        print(f"[Delete errors] {'; '.join(errors)}")
 
     run_row_deleted = 0
     if run_id:
@@ -1065,4 +1135,4 @@ def cron_cleanup():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=(os.environ.get("FLASK_DEBUG", "").strip() == "1"))
