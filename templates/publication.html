@@ -42,6 +42,8 @@
       }
       #footer-wrapper.compact-footer {
         padding: 1.2em 0 1em;
+        position: relative;
+        z-index: 150;
       }
       .compact-footer-links {
         display: flex;
@@ -50,9 +52,14 @@
         gap: 10px;
         margin: 0;
         padding: 0;
+        position: relative;
+        z-index: 160;
       }
       .compact-footer-links a {
         text-decoration: none;
+        position: relative;
+        z-index: 170;
+        pointer-events: auto;
       }
       #footer-wrapper.compact-footer #copyright {
         margin: 0.8em 0 0 0;
