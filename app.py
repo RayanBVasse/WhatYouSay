@@ -534,6 +534,17 @@ def delete_run_objects(run_id: str, upload_path: str):
 
     return deleted_upload, deleted_results, errors
 
+
+def log_usage_event(event_name: str, run_id: str = "", meta: dict = None):
+    if not store.ready:
+        return
+    payload = {"event_name": str(event_name)}
+    if run_id:
+        payload["run_id"] = run_id
+    if isinstance(meta, dict) and meta:
+        payload["meta"] = meta
+    store.safe_insert_usage_event(payload)
+
 # -----------------------------
 # Routes
 # -----------------------------
@@ -701,6 +712,11 @@ def upload():
         "status": "uploaded",
         "upload_path": upload_path,
     })
+    log_usage_event(
+        "upload_success",
+        run_id=run_id,
+        meta={"platform": (platform or "unknown").lower()},
+    )
 
     # Confirmation page
     return render_template(
@@ -764,9 +780,11 @@ def level_a():
                     "metrics_path": f"{run_id}/metrics_levelA.json",
                 },
             )
+            log_usage_event("levela_complete", run_id=run_id)
             metrics = load_level_a_metrics(run_id) or metrics
         except Exception as e:
             store.safe_update_run(run_id, {"status": "error", "error_message": str(e)})
+            log_usage_event("levela_error", run_id=run_id, meta={"stage": "level_a"})
             return render_template(
                 "error.html",
                 message="Level A processing failed. Please retry the upload.",
@@ -916,6 +934,7 @@ def ensure_level_b_report(run_id: str, safe_user: str):
             "levelb_path": f"{run_id}/levelB_output.json",
         },
     )
+    log_usage_event("levelb_complete", run_id=run_id)
     return report
 
 
@@ -944,6 +963,7 @@ def level_b_generate():
         return jsonify({"ok": True, "redirect": url_for("level_b")})
     except Exception as e:
         store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
+        log_usage_event("levelb_error", run_id=run_id, meta={"stage": "level_b_generate"})
         return jsonify({
             "ok": False,
             "error": "Level B generation failed. Please retry in a moment.",
@@ -970,6 +990,7 @@ def level_b():
         report = ensure_level_b_report(run_id, safe_user)
     except Exception as e:
         store.safe_update_run(run_id, {"status": "error", "error_message": f"levelb:{e}"})
+        log_usage_event("levelb_error", run_id=run_id, meta={"stage": "level_b_page"})
         return render_template(
             "error.html",
             title="Level B generation failed",
@@ -1069,6 +1090,16 @@ def delete_and_exit():
         "errors_count": len(errors),
         "verification": verification,
     }
+    log_usage_event(
+        "delete_exit",
+        run_id=(run_id or ""),
+        meta={
+            "uploads_deleted": int(deleted_upload),
+            "result_objects_deleted": int(deleted_results),
+            "run_rows_deleted": int(run_row_deleted),
+            "verification": verification,
+        },
+    )
 
     session.clear()
     session["deletion_receipt"] = receipt
@@ -1117,6 +1148,19 @@ def cron_cleanup():
             store.safe_update_run(run_id, {"status": "deleted", "deleted_at": now.isoformat()})
 
         runs_processed += 1
+
+    log_usage_event(
+        "cron_cleanup_summary",
+        meta={
+            "retention_hours": CLEANUP_RETENTION_HOURS,
+            "scanned_rows": scanned,
+            "runs_processed": runs_processed,
+            "uploads_deleted": uploads_deleted,
+            "result_objects_deleted": result_objects_deleted,
+            "rows_deleted": row_deletes,
+            "errors_count": len(errors),
+        },
+    )
 
     return jsonify(
         {

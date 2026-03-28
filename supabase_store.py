@@ -16,6 +16,7 @@ class SupabaseStore:
         self.key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
         self.upload_bucket = os.getenv("SUPABASE_UPLOADS_BUCKET", "wys_uploads")
         self.results_bucket = os.getenv("SUPABASE_RESULTS_BUCKET", "wys_results")
+        self.usage_events_table = os.getenv("SUPABASE_USAGE_EVENTS_TABLE", "usage_events")
         self.client = create_client(self.url, self.key) if (self.url and self.key) else None
 
     @property
@@ -95,3 +96,14 @@ class SupabaseStore:
             self.delete_run(run_id)
         except Exception as e:
             print(f"[Supabase runs delete skipped] {e}")
+
+    def insert_usage_event(self, payload: Dict) -> None:
+        if not self.client:
+            return
+        self.client.table(self.usage_events_table).insert(payload).execute()
+
+    def safe_insert_usage_event(self, payload: Dict) -> None:
+        try:
+            self.insert_usage_event(payload)
+        except Exception as e:
+            print(f"[Supabase usage_events insert skipped] {e}")
