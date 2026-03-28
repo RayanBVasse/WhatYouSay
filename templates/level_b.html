@@ -733,6 +733,15 @@
 <script src="/static/js/util.js"></script>
 <script src="/static/js/main.js"></script>
 <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (typeof window.va === "function") {
+      try {
+        window.va("event", { name: "levelb_complete" });
+      } catch (e) {}
+    }
+  });
+</script>
+<script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
